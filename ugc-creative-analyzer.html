@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UGC Creative Intelligence Analyzer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0a0a0a;
+    color: #e8e4dc;
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  .app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #1e1e1e;
+  }
+
+  .header-left { display: flex; align-items: center; gap: 12px; }
+
+  .dot {
+    width: 10px; height: 10px;
+    background: #ff4d00; border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  .title {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px; letter-spacing: 0.15em;
+    color: #888; text-transform: uppercase;
+  }
+
+  .beta-badge {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    padding: 3px 8px; background: #ff4d0015;
+    border: 1px solid #ff4d0040; color: #ff4d00;
+    border-radius: 3px; letter-spacing: 0.1em;
+  }
+
+  /* API KEY INPUT */
+  .api-key-bar {
+    background: #111; border: 1px solid #222;
+    border-radius: 10px; padding: 16px 20px;
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+
+  .api-key-label {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 0.1em; color: #555; text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .api-key-input {
+    flex: 1; min-width: 200px;
+    background: #0d0d0d; border: 1px solid #222;
+    border-radius: 6px; padding: 8px 12px;
+    color: #e8e4dc; font-family: 'Space Mono', monospace;
+    font-size: 12px; outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .api-key-input:focus { border-color: #ff4d00; }
+
+  .api-key-status {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 0.08em; padding: 4px 10px;
+    border-radius: 4px; white-space: nowrap;
+  }
+
+  .api-key-status.set { background: #00c47a20; color: #00c47a; border: 1px solid #00c47a30; }
+  .api-key-status.unset { background: #ff4d0015; color: #ff4d00; border: 1px solid #ff4d0030; }
+
+  .api-key-link {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: #555; text-decoration: none; white-space: nowrap;
+    transition: color 0.2s;
+  }
+  .api-key-link:hover { color: #888; }
+
+  /* UPLOAD */
+  .upload-zone {
+    border: 1.5px dashed #2a2a2a; border-radius: 12px;
+    padding: 64px 32px; text-align: center; cursor: pointer;
+    transition: all 0.25s; position: relative;
+    background: #0d0d0d; margin-bottom: 24px;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: #ff4d00; background: #ff4d0008;
+  }
+
+  .upload-zone input {
+    position: absolute; inset: 0; opacity: 0;
+    cursor: pointer; width: 100%; height: 100%;
+  }
+
+  .upload-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+  .upload-title { font-size: 18px; font-weight: 500; color: #e8e4dc; margin-bottom: 8px; }
+  .upload-sub { font-size: 13px; color: #555; font-family: 'Space Mono', monospace; }
+
+  .context-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  .field-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .field-label {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 0.12em; color: #555; text-transform: uppercase;
+  }
+
+  .field-input, .field-select {
+    background: #111; border: 1px solid #222; border-radius: 8px;
+    padding: 10px 14px; color: #e8e4dc;
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+    outline: none; transition: border-color 0.2s; width: 100%;
+  }
+
+  .field-input:focus, .field-select:focus { border-color: #ff4d00; }
+  .field-select option { background: #111; }
+
+  textarea.field-input { resize: vertical; min-height: 100px; }
+
+  .analyze-btn {
+    width: 100%; padding: 16px; background: #ff4d00; color: #fff;
+    border: none; border-radius: 8px;
+    font-family: 'Space Mono', monospace; font-size: 13px;
+    letter-spacing: 0.1em; cursor: pointer; transition: all 0.2s;
+    text-transform: uppercase; margin-bottom: 40px;
+  }
+
+  .analyze-btn:hover:not(:disabled) { background: #ff6420; transform: translateY(-1px); }
+  .analyze-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* OR DIVIDER */
+  .or-divider {
+    text-align: center; font-family: 'Space Mono', monospace;
+    font-size: 10px; color: #333; letter-spacing: 0.1em;
+    margin: 16px 0; position: relative;
+  }
+  .or-divider::before, .or-divider::after {
+    content: ''; position: absolute; top: 50%;
+    width: 44%; height: 1px; background: #1a1a1a;
+  }
+  .or-divider::before { left: 0; }
+  .or-divider::after { right: 0; }
+
+  .url-row { display: flex; gap: 10px; margin-bottom: 24px; }
+  .url-row .field-input { flex: 1; }
+
+  .url-paste-btn {
+    padding: 10px 16px; background: #1a1a1a;
+    border: 1px solid #222; border-radius: 8px;
+    color: #888; font-family: 'Space Mono', monospace;
+    font-size: 11px; cursor: pointer; white-space: nowrap; transition: all 0.2s;
+  }
+  .url-paste-btn:hover { border-color: #444; color: #ccc; }
+
+  /* FILE PREVIEW */
+  .file-preview {
+    display: flex; align-items: center; gap: 12px;
+    background: #111; border: 1px solid #1e1e1e;
+    border-radius: 8px; padding: 14px 18px; margin-bottom: 24px;
+  }
+  .file-name {
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    color: #888; flex: 1; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
+  .file-remove {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: #444; cursor: pointer; padding: 4px 8px;
+    border-radius: 4px; transition: color 0.2s;
+    border: none; background: none;
+  }
+  .file-remove:hover { color: #ff4d00; }
+
+  /* ERROR */
+  .error-msg {
+    background: #ff4d0010; border: 1px solid #ff4d0030;
+    border-radius: 8px; padding: 14px 18px;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    color: #ff4d00; margin-bottom: 20px; display: none;
+  }
+  .error-msg.active { display: block; }
+
+  /* LOADING */
+  .loading-state { text-align: center; padding: 80px 32px; display: none; }
+  .loading-state.active { display: block; }
+
+  .loading-bar-container {
+    width: 300px; height: 2px; background: #1a1a1a;
+    border-radius: 1px; margin: 24px auto; overflow: hidden;
+  }
+  .loading-bar {
+    height: 100%; background: #ff4d00; border-radius: 1px;
+    animation: load 3s ease-in-out infinite; width: 40%;
+  }
+  @keyframes load { 0%{transform:translateX(-100%)} 100%{transform:translateX(350%)} }
+
+  .loading-text {
+    font-family: 'Space Mono', monospace; font-size: 11px;
+    color: #555; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+
+  /* RESULTS */
+  .results { display: none; }
+  .results.active { display: block; }
+
+  .results-header {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 32px;
+  }
+
+  .score-number {
+    font-family: 'Space Mono', monospace; font-size: 48px;
+    font-weight: 700; color: #00ff88; line-height: 1;
+  }
+  .score-max { font-family: 'Space Mono', monospace; font-size: 16px; color: #444; }
+  .score-label { font-family: 'Space Mono', monospace; font-size: 11px; color: #555; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  /* TIMELINE */
+  .timeline-section {
+    background: #0d0d0d; border: 1px solid #1a1a1a;
+    border-radius: 12px; padding: 28px; margin-bottom: 20px;
+  }
+
+  .section-label {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 0.15em; color: #555; text-transform: uppercase; margin-bottom: 16px;
+  }
+
+  .timeline-ruler {
+    display: flex; justify-content: space-between;
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: #444; margin-bottom: 8px;
+  }
+
+  .timeline-bar {
+    display: flex; height: 48px; border-radius: 6px;
+    overflow: hidden; gap: 2px; margin-bottom: 16px;
+  }
+
+  .segment {
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 2px; cursor: default;
+    transition: filter 0.2s;
+  }
+  .segment:hover { filter: brightness(1.15); }
+
+  .seg-hook { background: #ff4d00; }
+  .seg-problem { background: #9b6fd4; }
+  .seg-demo { background: #00b4ff; }
+  .seg-social { background: #00c47a; }
+  .seg-cta { background: #ffb800; }
+
+  .seg-label {
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    font-weight: 700; letter-spacing: 0.08em; color: #000; text-transform: uppercase;
+  }
+  .seg-time { font-family: 'Space Mono', monospace; font-size: 8px; color: rgba(0,0,0,0.6); }
+
+  .timeline-annotations {
+    display: flex; justify-content: space-between;
+    font-family: 'Space Mono', monospace; font-size: 10px; color: #555;
+  }
+
+  /* METRICS */
+  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+
+  .metric-card {
+    background: #0d0d0d; border: 1px solid #1a1a1a;
+    border-radius: 12px; padding: 20px;
+  }
+  .metric-name {
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    letter-spacing: 0.12em; color: #555; text-transform: uppercase; margin-bottom: 12px;
+  }
+  .metric-bar-bg {
+    height: 2px; background: #1a1a1a; border-radius: 1px;
+    margin-bottom: 10px; overflow: hidden;
+  }
+  .metric-bar-fill {
+    height: 100%; background: #ff4d00; border-radius: 1px; transition: width 1s ease;
+  }
+  .metric-value {
+    font-family: 'Space Mono', monospace; font-size: 22px;
+    font-weight: 700; color: #e8e4dc;
+  }
+
+  /* ANALYSIS CARDS */
+  .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+
+  .analysis-card {
+    background: #0d0d0d; border: 1px solid #1a1a1a;
+    border-radius: 12px; padding: 24px;
+  }
+  .analysis-card-title {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 0.12em; color: #555; text-transform: uppercase;
+    margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .analysis-text { font-size: 13px; line-height: 1.7; color: #888; }
+  .analysis-text strong { color: #e8e4dc; font-weight: 500; }
+
+  .score-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 4px;
+    font-family: 'Space Mono', monospace; font-size: 11px; margin-bottom: 12px;
+  }
+  .score-pill.high { background: #00c47a20; color: #00c47a; border: 1px solid #00c47a30; }
+  .score-pill.mid  { background: #ffb80020; color: #ffb800; border: 1px solid #ffb80030; }
+  .score-pill.low  { background: #ff4d0020; color: #ff4d00; border: 1px solid #ff4d0030; }
+
+  .authenticity-bar {
+    height: 6px; background: #1a1a1a;
+    border-radius: 3px; overflow: hidden; margin: 8px 0;
+  }
+  .authenticity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff4d00, #ffb800, #00c47a);
+    border-radius: 3px; transition: width 1s ease;
+  }
+
+  /* RECOMMENDATIONS */
+  .recommendations {
+    background: #0d0d0d; border: 1px solid #1a1a1a;
+    border-radius: 12px; padding: 28px; margin-bottom: 20px;
+  }
+  .rec-item {
+    display: flex; gap: 16px;
+    padding: 16px 0; border-bottom: 1px solid #161616;
+  }
+  .rec-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .rec-number { font-family: 'Space Mono', monospace; font-size: 11px; color: #ff4d00; width: 24px; flex-shrink: 0; padding-top: 2px; }
+  .rec-title { font-size: 14px; font-weight: 500; color: #e8e4dc; margin-bottom: 4px; }
+  .rec-desc { font-size: 13px; color: #555; line-height: 1.6; }
+
+  /* HOOKS */
+  .hooks-section {
+    background: #0d0d0d; border: 1px solid #1a1a1a;
+    border-radius: 12px; padding: 28px; margin-bottom: 20px;
+  }
+  .hook-item {
+    background: #111; border: 1px solid #1e1e1e;
+    border-radius: 8px; padding: 16px; margin-bottom: 10px;
+    transition: border-color 0.2s;
+  }
+  .hook-item:last-child { margin-bottom: 0; }
+  .hook-item:hover { border-color: #333; }
+  .hook-type {
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; color: #ff4d00; text-transform: uppercase; margin-bottom: 6px;
+  }
+  .hook-text { font-size: 14px; color: #e8e4dc; line-height: 1.5; }
+
+  /* REWRITES */
+  .rewrite-section {
+    background: #0d0d0d; border: 1px solid #1a1a1a;
+    border-radius: 12px; padding: 28px; margin-bottom: 20px;
+  }
+  .rewrite-block {
+    border-left: 2px solid #ff4d00; padding-left: 16px; margin-bottom: 20px;
+  }
+  .rewrite-block:last-child { margin-bottom: 0; }
+  .rewrite-variant-label {
+    font-family: 'Space Mono', monospace; font-size: 9px;
+    letter-spacing: 0.1em; color: #ff4d00; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .rewrite-text { font-size: 13px; color: #888; line-height: 1.7; }
+
+  /* AIRTABLE SAVE */
+  .save-section {
+    background: #0d0d0d; border: 1px solid #1a1a1a;
+    border-radius: 12px; padding: 24px; margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .save-text { font-size: 13px; color: #555; }
+  .save-text strong { color: #888; font-weight: 500; }
+  .save-btn {
+    padding: 10px 20px; background: transparent;
+    border: 1px solid #00c47a50; border-radius: 6px;
+    color: #00c47a; font-family: 'Space Mono', monospace;
+    font-size: 11px; letter-spacing: 0.08em; cursor: pointer;
+    transition: all 0.2s; text-transform: uppercase; white-space: nowrap;
+  }
+  .save-btn:hover { background: #00c47a15; }
+  .save-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .save-status {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    letter-spacing: 0.08em; color: #555;
+  }
+
+  /* FOOTER */
+  .footer-stats {
+    display: flex; gap: 24px; padding: 20px 0;
+    border-top: 1px solid #1a1a1a; margin-top: 12px;
+  }
+  .footer-stat {
+    font-family: 'Space Mono', monospace; font-size: 10px;
+    color: #444; display: flex; align-items: center; gap: 6px;
+  }
+  .footer-stat::before {
+    content: ''; width: 6px; height: 6px;
+    border-radius: 50%; background: #222;
+  }
+
+  .new-analysis-btn {
+    width: 100%; padding: 14px; background: transparent;
+    color: #555; border: 1px solid #222; border-radius: 8px;
+    font-family: 'Space Mono', monospace; font-size: 12px;
+    letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s;
+    text-transform: uppercase; margin-top: 8px;
+  }
+  .new-analysis-btn:hover { border-color: #444; color: #888; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-left">
+      <div class="dot"></div>
+      <span class="title">Creative Intelligence · UGC Analyzer</span>
+    </div>
+    <span class="beta-badge">BETA</span>
+  </div>
+
+  <!-- UPLOAD SECTION -->
+  <div id="upload-section">
+
+    <!-- API KEY BAR -->
+    <div class="api-key-bar">
+      <span class="api-key-label">Anthropic API Key</span>
+      <input type="password" class="api-key-input" id="api-key-input"
+        placeholder="sk-ant-api03-..."
+        oninput="updateKeyStatus()">
+      <span class="api-key-status unset" id="key-status">NOT SET</span>
+      <a class="api-key-link" href="https://console.anthropic.com" target="_blank">Get a key →</a>
+    </div>
+
+    <div class="upload-zone" id="drop-zone">
+      <input type="file" id="file-input" accept="video/*,image/*,.mp4,.mov,.avi,.webm">
+      <div class="upload-icon">⬆</div>
+      <div class="upload-title">Drop your UGC ad here</div>
+      <div class="upload-sub">MP4 · MOV · AVI · WEBM · Images accepted</div>
+    </div>
+
+    <div class="or-divider">OR PASTE URL</div>
+
+    <div class="url-row">
+      <input type="text" class="field-input" id="url-input" placeholder="https://... (TikTok, Instagram, YouTube, Drive)">
+      <button class="url-paste-btn" id="paste-btn">PASTE</button>
+    </div>
+
+    <div id="file-preview" class="file-preview" style="display:none">
+      <span style="font-size:24px;opacity:0.6">🎬</span>
+      <span class="file-name" id="file-name-display"></span>
+      <button class="file-remove" id="remove-file">✕ REMOVE</button>
+    </div>
+
+    <div class="context-row">
+      <div class="field-group">
+        <label class="field-label">Product / Brand</label>
+        <input type="text" class="field-input" id="brand-input" placeholder="e.g. Athletic Greens, Skincare brand...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Target Platform</label>
+        <select class="field-select" id="platform-select">
+          <option value="tiktok">TikTok</option>
+          <option value="instagram">Instagram Reels</option>
+          <option value="youtube">YouTube Shorts</option>
+          <option value="facebook">Facebook / Meta</option>
+          <option value="general">General / Unknown</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Video Duration</label>
+        <input type="text" class="field-input" id="duration-input" placeholder="e.g. 15s, 30s, 60s">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Ad Objective</label>
+        <select class="field-select" id="objective-select">
+          <option value="conversion">Conversion / Purchase</option>
+          <option value="awareness">Brand Awareness</option>
+          <option value="app_install">App Install</option>
+          <option value="lead_gen">Lead Generation</option>
+          <option value="traffic">Traffic / Click</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field-group" style="margin-bottom:24px">
+      <label class="field-label">Ad Script / Transcript</label>
+      <textarea class="field-input" id="script-input" rows="5"
+        placeholder="Paste the ad script or transcript here. The more detail you provide, the more accurate the analysis. This is the most important input."></textarea>
+    </div>
+
+    <!-- AIRTABLE OPTIONAL -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;">
+      <div class="field-group">
+        <label class="field-label">Airtable API Key (optional — saves to your library)</label>
+        <input type="password" class="field-input" id="airtable-key" placeholder="patXXXXXX...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Airtable Base ID (optional)</label>
+        <input type="text" class="field-input" id="airtable-base" placeholder="appXXXXXX...">
+      </div>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <button class="analyze-btn" id="analyze-btn">⚡ ANALYZE CREATIVE</button>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading-state" id="loading-state">
+    <div style="font-family:'Space Mono',monospace;font-size:11px;color:#555;letter-spacing:0.15em;text-transform:uppercase;margin-bottom:8px">ANALYZING</div>
+    <div class="loading-bar-container"><div class="loading-bar"></div></div>
+    <div class="loading-text" id="loading-text">Parsing hook structure...</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+
+    <div class="results-header">
+      <div>
+        <div class="title" style="margin-bottom:6px">CREATIVE INTELLIGENCE · AD ANALYSIS</div>
+        <div id="brand-label" style="font-size:13px;color:#555;font-family:'Space Mono',monospace;"></div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:4px">
+        <span class="score-label" style="margin-right:8px">Score</span>
+        <span class="score-number" id="final-score">—</span>
+        <span class="score-max">/100</span>
+      </div>
+    </div>
+
+    <!-- TIMELINE -->
+    <div class="timeline-section">
+      <div class="section-label">Video Structure Timeline</div>
+      <div class="timeline-ruler" id="timeline-ruler"></div>
+      <div class="timeline-bar" id="timeline-bar"></div>
+      <div class="timeline-annotations" id="timeline-annotations"></div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-name">Hook Retention</div>
+        <div class="metric-bar-bg"><div class="metric-bar-fill" id="hook-bar" style="width:0%"></div></div>
+        <div class="metric-value" id="hook-retention">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">Avg Watch Time</div>
+        <div class="metric-bar-bg"><div class="metric-bar-fill" id="watch-bar" style="width:0%"></div></div>
+        <div class="metric-value" id="avg-watch">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">CTA Tap Rate</div>
+        <div class="metric-bar-bg"><div class="metric-bar-fill" id="cta-bar" style="width:0%"></div></div>
+        <div class="metric-value" id="cta-rate">—</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">Creative Score</div>
+        <div class="metric-bar-bg"><div class="metric-bar-fill" id="creative-bar" style="width:0%"></div></div>
+        <div class="metric-value" id="creative-score">—</div>
+      </div>
+    </div>
+
+    <!-- ANALYSIS CARDS -->
+    <div class="analysis-grid">
+      <div class="analysis-card">
+        <div class="analysis-card-title">🪝 Hook Analysis</div>
+        <div id="hook-score-pill"></div>
+        <div class="analysis-text" id="hook-analysis">—</div>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-title">🎭 Authenticity Score</div>
+        <div id="auth-score-display" style="font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:#e8e4dc;margin-bottom:8px;">—</div>
+        <div class="authenticity-bar"><div class="authenticity-fill" id="auth-bar" style="width:0%"></div></div>
+        <div class="analysis-text" id="auth-analysis">—</div>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-title">⚡ Pacing Analysis</div>
+        <div class="analysis-text" id="pacing-analysis">—</div>
+      </div>
+      <div class="analysis-card">
+        <div class="analysis-card-title">📣 CTA Analysis</div>
+        <div class="analysis-text" id="cta-analysis">—</div>
+      </div>
+    </div>
+
+    <!-- RECOMMENDATIONS -->
+    <div class="recommendations">
+      <div class="section-label">Improvement Recommendations</div>
+      <div id="recommendations-list"></div>
+    </div>
+
+    <!-- HOOKS -->
+    <div class="hooks-section">
+      <div class="section-label">Alternative Hook Ideas</div>
+      <div id="hooks-list"></div>
+    </div>
+
+    <!-- REWRITES -->
+    <div class="rewrite-section">
+      <div class="section-label">Rewrite Variants</div>
+      <div id="rewrites-list"></div>
+    </div>
+
+    <!-- SAVE TO AIRTABLE -->
+    <div class="save-section" id="save-section" style="display:none">
+      <div class="save-text"><strong>Save this analysis</strong> to your Airtable ad library</div>
+      <span class="save-status" id="save-status"></span>
+      <button class="save-btn" id="save-btn" onclick="saveToAirtable()">SAVE TO LIBRARY</button>
+    </div>
+
+    <div class="footer-stats">
+      <span class="footer-stat">AI-powered analysis</span>
+      <span class="footer-stat" id="footer-platform"></span>
+      <span class="footer-stat" id="footer-objective"></span>
+    </div>
+
+    <button class="new-analysis-btn" id="new-analysis-btn">↺ ANALYZE ANOTHER AD</button>
+  </div>
+
+</div>
+
+<script>
+const SEGMENT_COLORS = { hook:'seg-hook', problem:'seg-problem', product_demo:'seg-demo', social_proof:'seg-social', cta:'seg-cta' };
+const SEGMENT_LABELS = { hook:'HOOK', problem:'PROBLEM', product_demo:'PRODUCT DEMO', social_proof:'SOCIAL PROOF', cta:'CTA' };
+
+let selectedFile = null;
+let analysisData = null;
+let currentBrand = '';
+
+const loadingMessages = [
+  'Parsing hook structure...',
+  'Analyzing pacing & flow...',
+  'Benchmarking against top performers...',
+  'Scoring authenticity signals...',
+  'Generating recommendations...',
+  'Finalizing creative intelligence report...'
+];
+
+function updateKeyStatus() {
+  const key = document.getElementById('api-key-input').value.trim();
+  const status = document.getElementById('key-status');
+  if (key.startsWith('sk-ant')) {
+    status.textContent = 'KEY SET';
+    status.className = 'api-key-status set';
+  } else {
+    status.textContent = 'NOT SET';
+    status.className = 'api-key-status unset';
+  }
+}
+
+document.getElementById('file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) setFile(file);
+});
+
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) setFile(file);
+});
+
+function setFile(file) {
+  selectedFile = file;
+  document.getElementById('file-name-display').textContent = file.name;
+  document.getElementById('file-preview').style.display = 'flex';
+  document.getElementById('url-input').value = '';
+}
+
+document.getElementById('remove-file').addEventListener('click', () => {
+  selectedFile = null;
+  document.getElementById('file-preview').style.display = 'none';
+  document.getElementById('file-input').value = '';
+});
+
+document.getElementById('paste-btn').addEventListener('click', async () => {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById('url-input').value = text;
+  } catch { document.getElementById('url-input').focus(); }
+});
+
+document.getElementById('new-analysis-btn').addEventListener('click', resetUI);
+
+function resetUI() {
+  selectedFile = null;
+  analysisData = null;
+  document.getElementById('file-preview').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  document.getElementById('url-input').value = '';
+  document.getElementById('script-input').value = '';
+  document.getElementById('brand-input').value = '';
+  document.getElementById('results').classList.remove('active');
+  document.getElementById('upload-section').style.display = 'block';
+  hideError();
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.classList.add('active');
+}
+
+function hideError() { document.getElementById('error-msg').classList.remove('active'); }
+
+document.getElementById('analyze-btn').addEventListener('click', runAnalysis);
+
+async function runAnalysis() {
+  hideError();
+  const apiKey = document.getElementById('api-key-input').value.trim();
+  const script = document.getElementById('script-input').value.trim();
+  const url = document.getElementById('url-input').value.trim();
+  const brand = document.getElementById('brand-input').value.trim() || 'Unknown brand';
+  const platform = document.getElementById('platform-select').value;
+  const objective = document.getElementById('objective-select').value;
+  const duration = document.getElementById('duration-input').value.trim() || 'Unknown';
+
+  if (!apiKey || !apiKey.startsWith('sk-ant')) {
+    showError('Please enter your Anthropic API key above to use this tool.');
+    return;
+  }
+  if (!script && !selectedFile && !url) {
+    showError('Please upload a file, paste a URL, or provide the ad script/transcript.');
+    return;
+  }
+
+  currentBrand = brand;
+  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('loading-state').classList.add('active');
+
+  let msgIdx = 0;
+  const msgInterval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % loadingMessages.length;
+    document.getElementById('loading-text').textContent = loadingMessages[msgIdx];
+  }, 1800);
+
+  try {
+    const contextParts = [
+      `Brand/Product: ${brand}`,
+      `Platform: ${platform}`,
+      `Ad Objective: ${objective}`,
+      `Video Duration: ${duration}`,
+      url ? `URL/Source: ${url}` : null,
+      script ? `Script/Transcript:\n${script}` : null,
+      selectedFile ? `File uploaded: ${selectedFile.name}` : null
+    ].filter(Boolean).join('\n');
+
+    const prompt = `You are an elite UGC (User Generated Content) ad creative analyst. Analyze the following ad creative and return a JSON analysis object.
+
+Context:
+${contextParts}
+
+Return ONLY a valid JSON object with this exact structure (no markdown, no explanation):
+{
+  "creative_score": <number 0-100>,
+  "hook_retention_pct": <number 0-100>,
+  "avg_watch_time_s": <number>,
+  "video_duration_s": <number>,
+  "cta_tap_rate_pct": <number 0-10>,
+  "authenticity_score": <number 0-100>,
+  "hook_score": <number 0-100>,
+  "hook_score_label": <"STRONG"|"MODERATE"|"WEAK">,
+  "segments": [
+    {"type":"hook","duration_s":<number>},
+    {"type":"problem","duration_s":<number>},
+    {"type":"product_demo","duration_s":<number>},
+    {"type":"social_proof","duration_s":<number>},
+    {"type":"cta","duration_s":<number>}
+  ],
+  "hook_analysis": "<2-3 sentences>",
+  "authenticity_analysis": "<2 sentences>",
+  "pacing_analysis": "<2-3 sentences>",
+  "cta_analysis": "<2 sentences>",
+  "annotations": [
+    {"time_s":<number>,"label":"Hook drop-off: X%"},
+    {"time_s":<number>,"label":"Peak retention: X%"},
+    {"time_s":<number>,"label":"CTA tap: X%"}
+  ],
+  "recommendations": [
+    {"title":"<short title>","description":"<1-2 sentence recommendation>"},
+    {"title":"<short title>","description":"<1-2 sentence recommendation>"},
+    {"title":"<short title>","description":"<1-2 sentence recommendation>"},
+    {"title":"<short title>","description":"<1-2 sentence recommendation>"}
+  ],
+  "alternative_hooks": [
+    {"type":"CURIOSITY GAP","text":"<hook>"},
+    {"type":"BOLD CLAIM","text":"<hook>"},
+    {"type":"PAIN POINT","text":"<hook>"},
+    {"type":"SOCIAL PROOF OPEN","text":"<hook>"}
+  ],
+  "rewrite_variants": [
+    {"variant":"VARIANT A — EMOTIONAL","script":"<3-5 sentence rewrite>"},
+    {"variant":"VARIANT B — DIRECT RESPONSE","script":"<3-5 sentence rewrite>"},
+    {"variant":"VARIANT C — STORYTELLING","script":"<3-5 sentence rewrite>"}
+  ]
+}`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 2000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await response.json();
+    clearInterval(msgInterval);
+
+    if (data.error) throw new Error(data.error.message);
+
+    const rawText = data.content[0].text;
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error('Could not parse analysis response');
+
+    analysisData = JSON.parse(jsonMatch[0]);
+    analysisData._meta = { brand, platform, objective, duration, script };
+    renderResults(analysisData, brand, platform, objective);
+
+  } catch (err) {
+    clearInterval(msgInterval);
+    document.getElementById('loading-state').classList.remove('active');
+    document.getElementById('upload-section').style.display = 'block';
+    showError('Analysis failed: ' + err.message);
+  }
+}
+
+function renderResults(d, brand, platform, objective) {
+  document.getElementById('loading-state').classList.remove('active');
+  document.getElementById('results').classList.add('active');
+
+  document.getElementById('final-score').textContent = d.creative_score;
+  document.getElementById('brand-label').textContent = brand.toUpperCase() + ' · ' + platform.toUpperCase();
+
+  const duration = d.video_duration_s || 15;
+
+  // Timeline ruler
+  const steps = [0, Math.round(duration*0.2), Math.round(duration*0.4), Math.round(duration*0.6), Math.round(duration*0.8), duration];
+  const uniqueSteps = [...new Set(steps)];
+  document.getElementById('timeline-ruler').innerHTML = uniqueSteps.map(s => `<span>${s}s</span>`).join('');
+
+  // Timeline bar
+  const barEl = document.getElementById('timeline-bar');
+  barEl.innerHTML = '';
+  d.segments.forEach(seg => {
+    const pct = (seg.duration_s / duration) * 100;
+    const div = document.createElement('div');
+    div.className = 'segment ' + (SEGMENT_COLORS[seg.type] || 'seg-hook');
+    div.style.flexBasis = pct + '%';
+    div.innerHTML = `<span class="seg-label">${SEGMENT_LABELS[seg.type] || seg.type.toUpperCase()}</span><span class="seg-time">${seg.duration_s}s</span>`;
+    barEl.appendChild(div);
+  });
+
+  // Annotations
+  document.getElementById('timeline-annotations').innerHTML = (d.annotations || []).map(a =>
+    `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;font-family:'Space Mono',monospace;font-size:10px;color:#555"><span>${a.label}</span></div>`
+  ).join('');
+
+  // Metrics
+  document.getElementById('hook-retention').textContent = d.hook_retention_pct + '%';
+  document.getElementById('hook-bar').style.width = d.hook_retention_pct + '%';
+
+  document.getElementById('avg-watch').textContent = d.avg_watch_time_s + 's / ' + duration + 's';
+  document.getElementById('watch-bar').style.width = Math.min((d.avg_watch_time_s / duration) * 100, 100) + '%';
+
+  document.getElementById('cta-rate').textContent = d.cta_tap_rate_pct + '%';
+  document.getElementById('cta-bar').style.width = (d.cta_tap_rate_pct * 10) + '%';
+
+  document.getElementById('creative-score').textContent = d.creative_score + ' / 100';
+  document.getElementById('creative-bar').style.width = d.creative_score + '%';
+
+  // Hook pill
+  const pillClass = d.hook_score >= 75 ? 'high' : d.hook_score >= 50 ? 'mid' : 'low';
+  document.getElementById('hook-score-pill').innerHTML = `<div class="score-pill ${pillClass}">${d.hook_score_label} · ${d.hook_score}/100</div>`;
+  document.getElementById('hook-analysis').innerHTML = d.hook_analysis.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Authenticity
+  document.getElementById('auth-score-display').textContent = d.authenticity_score + '/100';
+  document.getElementById('auth-bar').style.width = d.authenticity_score + '%';
+  document.getElementById('auth-analysis').innerHTML = d.authenticity_analysis.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  document.getElementById('pacing-analysis').innerHTML = d.pacing_analysis.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  document.getElementById('cta-analysis').innerHTML = d.cta_analysis.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Recommendations
+  document.getElementById('recommendations-list').innerHTML = d.recommendations.map((r, i) => `
+    <div class="rec-item">
+      <span class="rec-number">0${i+1}</span>
+      <div>
+        <div class="rec-title">${r.title}</div>
+        <div class="rec-desc">${r.description}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Hooks
+  document.getElementById('hooks-list').innerHTML = d.alternative_hooks.map(h => `
+    <div class="hook-item">
+      <div class="hook-type">${h.type}</div>
+      <div class="hook-text">"${h.text}"</div>
+    </div>
+  `).join('');
+
+  // Rewrites
+  document.getElementById('rewrites-list').innerHTML = d.rewrite_variants.map(r => `
+    <div class="rewrite-block">
+      <div class="rewrite-variant-label">${r.variant}</div>
+      <div class="rewrite-text">"${r.script}"</div>
+    </div>
+  `).join('');
+
+  // Footer
+  document.getElementById('footer-platform').textContent = platform.toUpperCase();
+  document.getElementById('footer-objective').textContent = objective.toUpperCase().replace('_', ' ');
+
+  // Show Airtable save button if credentials exist
+  const atKey = document.getElementById('airtable-key').value.trim();
+  const atBase = document.getElementById('airtable-base').value.trim();
+  if (atKey && atBase) {
+    document.getElementById('save-section').style.display = 'flex';
+  }
+}
+
+async function saveToAirtable() {
+  if (!analysisData) return;
+  const atKey = document.getElementById('airtable-key').value.trim();
+  const atBase = document.getElementById('airtable-base').value.trim();
+  if (!atKey || !atBase) return;
+
+  const btn = document.getElementById('save-btn');
+  const status = document.getElementById('save-status');
+  btn.disabled = true;
+  btn.textContent = 'SAVING...';
+  status.textContent = '';
+
+  try {
+    const fields = {
+      'Brand': analysisData._meta?.brand || '',
+      'Platform': analysisData._meta?.platform || '',
+      'Script': analysisData._meta?.script || '',
+      'Creative Score': analysisData.creative_score,
+      'Hook Score': analysisData.hook_score,
+      'Analysis Output': JSON.stringify(analysisData, null, 2),
+      'Date': new Date().toISOString().split('T')[0]
+    };
+
+    const response = await fetch(`https://api.airtable.com/v0/${atBase}/Ads%20Analyzed`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${atKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ fields })
+    });
+
+    const data = await response.json();
+    if (data.error) throw new Error(data.error.message);
+
+    btn.textContent = 'SAVED';
+    btn.style.color = '#00c47a';
+    btn.style.borderColor = '#00c47a50';
+    status.textContent = 'Saved to Airtable ✓';
+    status.style.color = '#00c47a';
+
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = 'RETRY';
+    status.textContent = 'Save failed: ' + err.message;
+    status.style.color = '#ff4d00';
+  }
+}
+</script>
+</body>
+</html>
