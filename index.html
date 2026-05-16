@@ -872,7 +872,7 @@ Watch this video carefully and provide a detailed analysis. Return ONLY valid JS
     if (!fileUri) throw new Error('Gemini file upload did not return a URI');
 
     // Wait briefly for file processing
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 8000));
 
     // Now analyze
     const res = await fetch(
