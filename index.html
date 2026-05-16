@@ -535,7 +535,7 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6;}
     <div class="gemini-card" id="gemini-section" style="display:none">
       <div class="gemini-header">
         <div class="card-label" style="margin:0">Visual Analysis</div>
-        <span class="gemini-badge">GEMINI 2.0 FLASH</span>
+        <span class="gemini-badge">GEMINI 2.0 FLASH LITE</span>
       </div>
       <div class="gemini-insight-grid">
         <div class="g-insight">
@@ -876,7 +876,7 @@ Watch this video carefully and provide a detailed analysis. Return ONLY valid JS
 
     // Now analyze
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -901,7 +901,7 @@ Watch this video carefully and provide a detailed analysis. Return ONLY valid JS
     // For URL — ask Gemini to analyze based on URL context
     // Note: Gemini can't fetch arbitrary URLs directly, so we describe the URL
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
