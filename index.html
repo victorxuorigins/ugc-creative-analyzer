@@ -465,10 +465,10 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6;}
           <option value="general">General</option>
         </select>
       </div>
-      <div class="field-group">
-        <label class="field-label">Video Duration (if known)</label>
+      <div class="field-group" id="duration-field">
+        <label class="field-label">Duration <span style="font-size:8px;color:#333">(script-only mode)</span></label>
         <input type="text" class="field-input" id="duration-input"
-          placeholder="e.g. 15s, 30s, 60s">
+          placeholder="e.g. 15s, 30s — auto-detected from video">
       </div>
       <div class="field-group">
         <label class="field-label">Ad Objective</label>
@@ -648,10 +648,13 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6;}
     <div class="results-footer">
       <span class="footer-item" id="f-platform"></span>
       <span class="footer-item" id="f-objective"></span>
-      <span class="footer-item">Gemini 1.5 Pro + Claude Sonnet</span>
+      <span class="footer-item">Gemini 2.5 Flash Lite + Claude Sonnet 4</span>
     </div>
 
-    <button class="reset-btn" onclick="resetUI()">↺ ANALYZE ANOTHER AD</button>
+    <div style="display:flex;gap:10px;margin-top:6px;">
+      <button class="reset-btn" style="flex:1" onclick="resetUI()">↺ ANALYZE ANOTHER AD</button>
+      <button class="reset-btn" style="flex:1;border-color:#ff4d0040;color:#ff4d00;" onclick="shareResults()" id="share-btn">↗ COPY SHAREABLE SUMMARY</button>
+    </div>
   </div>
 
 </div>
@@ -667,7 +670,7 @@ const SEG_COLORS = {hook:'seg-hook',problem:'seg-problem',product_demo:'seg-demo
 const SEG_LABELS = {hook:'HOOK',problem:'PROBLEM',product_demo:'PRODUCT DEMO',social_proof:'SOCIAL PROOF',cta:'CTA'};
 
 const LOADING_STAGES = [
-  {stage:'UPLOADING VIDEO',detail:'Sending to Gemini 1.5 Pro for visual analysis...',dots:[1]},
+  {stage:'UPLOADING VIDEO',detail:'Sending to Gemini 2.5 Flash Lite for visual analysis...',dots:[1]},
   {stage:'GEMINI WATCHING',detail:'AI is analyzing your video frame by frame...',dots:[1,2]},
   {stage:'EXTRACTING INSIGHTS',detail:'Identifying hook, pacing, visual elements...',dots:[1,2,3]},
   {stage:'CLAUDE SCORING',detail:'Applying creative intelligence rubric...',dots:[1,2,3,4]},
@@ -713,12 +716,16 @@ function setFile(file) {
   document.getElementById('file-name-display').textContent = file.name;
   document.getElementById('file-size-display').textContent = (file.size / (1024*1024)).toFixed(1) + ' MB';
   document.getElementById('file-preview').style.display = 'flex';
+  // Hide duration field - Gemini detects it automatically
+  document.getElementById('duration-field').style.display = 'none';
+  document.getElementById('duration-input').value = '';
 }
 
 function removeFile() {
   selectedFile = null;
   document.getElementById('file-preview').style.display = 'none';
   document.getElementById('file-input').value = '';
+  document.getElementById('duration-field').style.display = 'block';
 }
 
 async function pasteUrl() {
@@ -872,7 +879,7 @@ Watch this video carefully and provide a detailed analysis. Return ONLY valid JS
     if (!fileUri) throw new Error('Gemini file upload did not return a URI');
 
     // Wait briefly for file processing
-    await new Promise(r => setTimeout(r, 8000));
+    await new Promise(r => setTimeout(r, 2000));
 
     // Now analyze
     const res = await fetch(
@@ -887,7 +894,7 @@ Watch this video carefully and provide a detailed analysis. Return ONLY valid JS
               { text: prompt }
             ]
           }],
-          generationConfig: { temperature: 0.2, maxOutputTokens: 1500 }
+          generationConfig: { temperature: 0, maxOutputTokens: 1500 }
         })
       }
     );
@@ -909,7 +916,7 @@ Watch this video carefully and provide a detailed analysis. Return ONLY valid JS
           contents: [{
             parts: [{ text: `The user provided this video URL: ${url}\n\nBased on the URL and any context you can infer about this video content, provide your best analysis. If this is a TikTok, Instagram, or YouTube URL, describe what a typical high-performing UGC ad from that platform looks like.\n\n${prompt}` }]
           }],
-          generationConfig: { temperature: 0.3, maxOutputTokens: 1000 }
+          generationConfig: { temperature: 0, maxOutputTokens: 1000 }
         })
       }
     );
@@ -1002,7 +1009,7 @@ Based on all available information, return ONLY a valid JSON object (no markdown
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-5',
-      max_tokens: 2500,
+      max_tokens: 2500, temperature: 0,
       messages: [{ role: 'user', content: prompt }]
     })
   });
@@ -1161,6 +1168,67 @@ async function saveToAirtable() {
     status.textContent = 'Failed: ' + err.message;
     status.style.color = '#ff4d00';
   }
+}
+
+// ── SHARE RESULTS ─────────────────────────────────────
+function shareResults() {
+  if (!analysisData) return;
+  const d = analysisData;
+  const m = d._meta || {};
+  const summary = `UGC CREATIVE INTELLIGENCE REPORT
+Generated by victorxuorigins.github.io/ugc-creative-analyzer
+
+Brand: ${m.brand || '—'}
+Platform: ${(m.platform || '—').toUpperCase()}
+Objective: ${(m.objective || '—').toUpperCase().replace('_',' ')}
+
+SCORES
+Creative Score: ${d.creative_score}/100
+Hook Score: ${d.hook_score_label} · ${d.hook_score}/100
+Hook Retention: ${d.hook_retention_pct}%
+Avg Watch Time: ${d.avg_watch_time_s}s / ${d.video_duration_s}s
+CTA Tap Rate: ${d.cta_tap_rate_pct}%
+Authenticity: ${d.authenticity_score}/100
+
+HOOK ANALYSIS
+${d.hook_analysis}
+
+PACING
+${d.pacing_analysis}
+
+CTA
+${d.cta_analysis}
+
+RECOMMENDATIONS
+${(d.recommendations||[]).map((r,i) => `${i+1}. ${r.title}: ${r.description}`).join('
+')}
+
+ALTERNATIVE HOOKS
+${(d.alternative_hooks||[]).map(h => `[${h.type}] "${h.text}"`).join('
+')}
+
+REWRITE VARIANTS
+${(d.rewrite_variants||[]).map(r => `${r.variant}
+"${r.script}"`).join('
+
+')}
+
+---
+Analyzed by UGC Creative Intelligence · Built by Victor Xu`;
+
+  navigator.clipboard.writeText(summary).then(() => {
+    const btn = document.getElementById('share-btn');
+    btn.textContent = '✓ COPIED TO CLIPBOARD';
+    btn.style.borderColor = '#00c47a40';
+    btn.style.color = '#00c47a';
+    setTimeout(() => {
+      btn.textContent = '↗ COPY SHAREABLE SUMMARY';
+      btn.style.borderColor = '#ff4d0040';
+      btn.style.color = '#ff4d00';
+    }, 2500);
+  }).catch(() => {
+    alert('Copy failed — please manually select and copy the report.');
+  });
 }
 
 // ── UTILS ──────────────────────────────────────────────
