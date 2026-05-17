@@ -30,10 +30,7 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
 .khint{font-size:11px;color:#444;}
 .khint a{color:#555;text-decoration:none;}
 .khint a:hover{color:#888;}
-.tabs{display:flex;gap:2px;margin-bottom:20px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:4px;}
-.tab{flex:1;padding:9px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:5px;color:#555;transition:all 0.2s;border:none;background:none;}
-.tab.on{background:#ff4d00;color:#fff;}
-.tab:not(.on):hover{color:#888;background:#111;}
+
 .drop-zone{border:1.5px dashed #222;border-radius:10px;padding:48px 32px;text-align:center;cursor:pointer;transition:all 0.2s;background:#0a0a0a;margin-bottom:18px;user-select:none;}
 .drop-zone:hover,.drop-zone.over{border-color:#ff4d00;background:#ff4d0006;}
 .dicon{font-size:36px;margin-bottom:12px;opacity:0.25;}
@@ -46,12 +43,7 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
 .fsize{font-family:'Space Mono',monospace;font-size:10px;color:#444;margin-top:2px;}
 .frem{font-family:'Space Mono',monospace;font-size:10px;color:#333;cursor:pointer;padding:4px 8px;border-radius:4px;transition:color 0.2s;border:none;background:none;}
 .frem:hover{color:#ff4d00;}
-.url-row{display:flex;gap:10px;margin-bottom:12px;}
-.url-in{flex:1;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:10px 14px;color:#e8e4dc;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
-.url-in:focus{border-color:#ff4d00;}
-.paste-btn{padding:10px 16px;background:#111;border:1px solid #1e1e1e;border-radius:8px;color:#666;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
-.paste-btn:hover{border-color:#333;color:#aaa;}
-.url-note{font-size:12px;color:#333;margin-bottom:18px;font-family:'Space Mono',monospace;}
+
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
 .fg{display:flex;flex-direction:column;gap:5px;}
 .flabel{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;}
@@ -184,16 +176,13 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
     </div>
   </div>
 
-  <div class="tabs">
-    <button class="tab on" id="tab-video" onclick="switchMode('video')">VIDEO FILE</button>
-    <button class="tab" id="tab-url" onclick="switchMode('url')">URL / LINK</button>
-  </div>
 
-  <div id="mode-video">
+
+
     <div class="drop-zone" id="dropzone" onclick="triggerFile()">
       <div class="dicon">⬆</div>
       <div class="dtitle">Drop your UGC ad video here</div>
-      <div class="dsub">MP4 · MOV · AVI · WEBM — Gemini watches it directly</div>
+      <div class="dsub">MP4 · MOV · AVI · WEBM · Download from TikTok or Meta Ad Library first</div>
     </div>
     <input type="file" id="fileinput" accept="video/*,.mp4,.mov,.avi,.webm" style="display:none">
     <div class="fprev" id="fprev">
@@ -206,13 +195,7 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
     </div>
   </div>
 
-  <div id="mode-url" style="display:none">
-    <div class="url-row">
-      <input type="text" class="url-in" id="urlin" placeholder="Paste TikTok, Instagram, YouTube, or Google Drive URL...">
-      <button class="paste-btn" onclick="doPaste()">PASTE</button>
-    </div>
-    <div class="url-note">Direct video URLs work best. For social links, download and upload as a file for most accurate analysis.</div>
-  </div>
+
 
   <div class="form-grid">
     <div class="fg">
@@ -372,13 +355,7 @@ function updateKey(iid, sid, pre) {
   }
 }
 
-function switchMode(m) {
-  mode = m;
-  document.getElementById('mode-video').style.display = m === 'video' ? 'block' : 'none';
-  document.getElementById('mode-url').style.display = m === 'url' ? 'block' : 'none';
-  document.getElementById('tab-video').className = 'tab' + (m === 'video' ? ' on' : '');
-  document.getElementById('tab-url').className = 'tab' + (m === 'url' ? ' on' : '');
-}
+
 
 function triggerFile() { document.getElementById('fileinput').click(); }
 
@@ -407,11 +384,7 @@ function removeFile() {
   document.getElementById('fileinput').value = '';
 }
 
-function doPaste() {
-  navigator.clipboard.readText().then(function(t) {
-    document.getElementById('urlin').value = t;
-  }).catch(function() { document.getElementById('urlin').focus(); });
-}
+
 
 function showErr(msg) { var e = document.getElementById('errmsg'); e.textContent = msg; e.classList.add('on'); }
 function hideErr() { document.getElementById('errmsg').classList.remove('on'); }
@@ -440,12 +413,8 @@ function runAnalysis() {
   var platform = document.getElementById('platform').value;
   var objective = document.getElementById('objective').value;
   var niche = document.getElementById('niche').value.trim();
-  var url = document.getElementById('urlin').value.trim();
-  var hasVid = mode === 'video' && selFile;
-  var hasUrl = mode === 'url' && url;
-
   if (!ck || ck.substring(0, 6) !== 'sk-ant') { showErr('Please enter your Anthropic API key.'); return; }
-  if (!hasVid && !hasUrl) { showErr('Please upload a video file or paste a URL.'); return; }
+  if (!selFile) { showErr('Please upload a video file to analyze.'); return; }
   if (!gk || gk.substring(0, 4) !== 'AIza') { showErr('A Gemini API key is required. Add one above.'); return; }
 
   document.getElementById('upload-section').style.display = 'none';
@@ -454,7 +423,7 @@ function runAnalysis() {
 
   var ctx = { brand: brand, platform: platform, objective: objective, niche: niche };
 
-  geminiAnalyze(gk, hasVid ? selFile : null, hasVid ? null : url, brand, platform)
+  geminiAnalyze(gk, selFile, null, brand, platform)
     .then(function(gi) {
       ctx.gemini = gi;
       ctx.script = gi ? (gi.transcript || '') : '';
@@ -984,14 +953,13 @@ function saveScripts(ak, ab, m, result) {
 
 function resetUI() {
   selFile=null; result=null; removeFile();
-  document.getElementById('urlin').value='';
   document.getElementById('brand').value='';
   document.getElementById('niche').value='';
   document.getElementById('results').classList.remove('on');
   document.getElementById('gpanel').style.display='none';
   document.getElementById('savecard').style.display='none';
   document.getElementById('upload-section').style.display='block';
-  hideErr(); switchMode('video');
+  hideErr();
 }
 </script>
 </body>
