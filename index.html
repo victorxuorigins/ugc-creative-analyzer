@@ -66,6 +66,7 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
 .ld{width:6px;height:6px;border-radius:50%;background:#1e1e1e;transition:background 0.3s;}
 .ld.on{background:#ff4d00;}
 .results{display:none;}
+#upload-section.hidden{display:none !important;height:0 !important;overflow:hidden !important;}
 .results.on{display:block;}
 .rhead{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:20px;}
 .rtitle{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:5px;}
@@ -414,7 +415,7 @@ function runAnalysis() {
   if (!selFile) { showErr('Please upload a video file to analyze.'); return; }
   if (!gk || gk.substring(0, 4) !== 'AIza') { showErr('A Gemini API key is required. Add one above.'); return; }
 
-  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('upload-section').classList.add('hidden');
   document.getElementById('loading').classList.add('on');
   startLoad();
 
@@ -435,7 +436,7 @@ function runAnalysis() {
     .catch(function(err) {
       stopLoad();
       document.getElementById('loading').classList.remove('on');
-      document.getElementById('upload-section').style.display = 'block';
+      document.getElementById('upload-section').classList.remove('hidden');
       showErr('Analysis failed: ' + err.message);
     });
 }
@@ -527,8 +528,9 @@ function safeJSON(text) {
 
 function renderResults(d, g, brand, platform, objective) {
   document.getElementById('loading').classList.remove('on');
-  document.getElementById('upload-section').style.display = 'none';
+  document.getElementById('upload-section').classList.add('hidden');
   document.getElementById('results').classList.add('on');
+  window.scrollTo(0, 0);
 
   var sc = d.creative_score || 0;
   var sel = document.getElementById('rscore');
@@ -957,7 +959,7 @@ function resetUI() {
   document.getElementById('loading').classList.remove('on');
   document.getElementById('gpanel').style.display='none';
   document.getElementById('savecard').style.display='none';
-  document.getElementById('upload-section').style.display='block';
+  document.getElementById('upload-section').classList.remove('hidden');
   hideErr();
 }
 </script>
