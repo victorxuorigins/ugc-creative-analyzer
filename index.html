@@ -307,8 +307,8 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
 
   <div class="mgrid">
     <div class="metric"><div class="mlabel">Hook Retention</div><div class="mtrack"><div class="mfill" id="mf1"></div></div><div class="mval" id="mv1">—</div></div>
-    <div class="metric"><div class="mlabel">Avg Watch Time</div><div class="mtrack"><div class="mfill" id="mf2"></div></div><div class="mval" id="mv2">—</div></div>
-    <div class="metric"><div class="mlabel">CTA Tap Rate</div><div class="mtrack"><div class="mfill" id="mf3"></div></div><div class="mval" id="mv3">—</div></div>
+    <div class="metric"><div class="mlabel">Avg Watch Time <span style="color:#333;font-size:7px;">(EST)</span></div><div class="mtrack"><div class="mfill" id="mf2"></div></div><div class="mval" id="mv2">—</div></div>
+    <div class="metric"><div class="mlabel">CTA Tap Rate <span style="color:#333;font-size:7px;">(EST)</span></div><div class="mtrack"><div class="mfill" id="mf3"></div></div><div class="mval" id="mv3">—</div></div>
     <div class="metric"><div class="mlabel">Authenticity</div><div class="mtrack"><div class="mfill" id="mf4"></div></div><div class="mval" id="mv4">—</div></div>
   </div>
 
@@ -652,40 +652,139 @@ function doSave() {
   btn.disabled = true; btn.textContent = 'SAVING...';
   var m = result._meta || {};
   var tableName = 'Ads Analyzed';
-  fetch('https://api.airtable.com/v0/' + ab + '/' + encodeURIComponent(tableName), {
+  var saveUrl = 'https://api.airtable.com/v0/' + ab + '/' + encodeURIComponent(tableName);
+
+  // Build hooks string
+  var hooksStr = (result.alternative_hooks||[]).map(function(h){
+    return '[' + h.type + '] ' + h.text;
+  }).join('\n');
+
+  // Build rewrites string
+  var rwStr = (result.rewrite_variants||[]).map(function(r){
+    return r.variant + ':\n' + r.script;
+  }).join('\n\n');
+
+  // Build recommendations string
+  var recsStr = (result.recommendations||[]).map(function(r,i){
+    return (i+1) + '. ' + r.title + ': ' + r.description;
+  }).join('\n');
+
+  // Build full analysis text
+  var analysisStr = [
+    'HOOK ANALYSIS: ' + (result.hook_analysis||''),
+    'PACING: ' + (result.pacing_analysis||''),
+    'CTA: ' + (result.cta_analysis||''),
+    'AUTHENTICITY: ' + (result.authenticity_analysis||''),
+    '',
+    'RECOMMENDATIONS:',
+    recsStr,
+    '',
+    'ALTERNATIVE HOOKS:',
+    hooksStr,
+    '',
+    'REWRITE VARIANTS:',
+    rwStr
+  ].join('\n');
+
+  var dur = result.video_duration_s || 30;
+  var g = m.gemini || {};
+
+  // Build timeline string for Analysis Output
+  var timelineStr = 'VIDEO STRUCTURE TIMELINE:\n';
+  (result.segments||[]).forEach(function(seg) {
+    var pct = ((seg.duration_s / dur) * 100).toFixed(0);
+    timelineStr += seg.type.toUpperCase().replace('_',' ') + ': ' + seg.duration_s + 's (' + pct + '%)\n';
+  });
+
+  // Full analysis output backup
+  var fullAnalysis = [
+    'VISUAL ANALYSIS:',
+    'Visual Hook: ' + (g.visual_hook||'N/A'),
+    'Scene Pacing: ' + (g.scene_pacing||'N/A'),
+    'Creator Energy: ' + (g.creator_energy||'N/A'),
+    'Product Visibility: ' + (g.product_visibility||'N/A'),
+    'Text Overlays: ' + (g.text_overlays||'None'),
+    'Platform Fit: ' + (g.platform_fit||'N/A'),
+    '',
+    timelineStr,
+    'METRICS:',
+    'Creative Score: ' + (result.creative_score||0) + '/100',
+    'Hook Score: ' + (result.hook_score_label||'') + ' ' + (result.hook_score||0) + '/100',
+    'Hook Retention: ' + (result.hook_retention_pct||0) + '%',
+    'Avg Watch Time (est): ' + (result.avg_watch_time_s||0) + 's / ' + dur + 's',
+    'CTA Tap Rate (est): ' + (result.cta_tap_rate_pct||0) + '%',
+    'Authenticity: ' + (result.authenticity_score||0) + '/100',
+    '',
+    analysisStr
+  ].join('\n');
+
+  var saveBody = {fields:{
+    'Brand':                m.brand || '',
+    'Platform':             m.platform || '',
+    'Niche':                m.niche || '',
+    'Date':                 new Date().toISOString().split('T')[0],
+    'Creative Score':       result.creative_score || 0,
+    'Hook Score':           result.hook_score || 0,
+    'Hook Score Label':     result.hook_score_label || '',
+    'Hook Retention %':     result.hook_retention_pct || 0,
+    'Avg Watch Time (s)':   result.avg_watch_time_s || 0,
+    'CTA Tap Rate %':       result.cta_tap_rate_pct || 0,
+    'Authenticity Score':   result.authenticity_score || 0,
+    'Total Duration (s)':   dur,
+    'Hook Duration (s)':    g.hook_duration_s || 0,
+    'Scene Count':          g.scene_count || 0,
+    'Visual Hook':          g.visual_hook || '',
+    'Scene Pacing':         g.scene_pacing || '',
+    'Creator Energy':       g.creator_energy || '',
+    'Product Visibility':   g.product_visibility || '',
+    'Text Overlays':        g.text_overlays || '',
+    'Platform Fit':         g.platform_fit || '',
+    'Script':               (m.script||'').substring(0,5000),
+    'Hook Analysis':        result.hook_analysis || '',
+    'Pacing Analysis':      result.pacing_analysis || '',
+    'CTA Analysis':         result.cta_analysis || '',
+    'Authenticity Analysis':result.authenticity_analysis || '',
+    'Recommendations':      recsStr,
+    'Alternative Hooks':    hooksStr,
+    'Rewrite Variants':     rwStr,
+    'Analysis Output':      fullAnalysis.substring(0,100000)
+  }};
+
+  console.log('Saving to Airtable:', saveUrl);
+  console.log('Fields:', JSON.stringify(saveBody.fields));
+
+  fetch(saveUrl, {
     method: 'POST',
     headers: {'Authorization':'Bearer '+ak,'Content-Type':'application/json'},
-    body: JSON.stringify({fields:{
-      'Brand': m.brand||'',
-      'Platform': m.platform||'',
-      'Script': (m.script||'').substring(0,10000),
-      'Creative Score': result.creative_score||0,
-      'Hook Score': result.hook_score||0,
-      'Analysis Output': JSON.stringify({
-        hook_analysis: result.hook_analysis,
-        pacing_analysis: result.pacing_analysis,
-        cta_analysis: result.cta_analysis,
-        recommendations: result.recommendations,
-        alternative_hooks: result.alternative_hooks
-      }),
-      'Date': new Date().toISOString().split('T')[0]
-    }})
+    body: JSON.stringify(saveBody)
   })
   .then(function(r){
-    return r.json().then(function(d){ return {ok: r.ok, status: r.status, data: d}; });
+    var status = r.status;
+    return r.text().then(function(txt){
+      console.log('Airtable response status:', status);
+      console.log('Airtable response body:', txt);
+      try { return {ok: r.ok, status: status, data: JSON.parse(txt)}; }
+      catch(e) { return {ok: r.ok, status: status, data: {error: {message: txt}}}; }
+    });
   })
   .then(function(res){
-    if (!res.ok || (res.data && res.data.error)) {
-      var msg = res.data && res.data.error ? res.data.error.message : ('HTTP ' + res.status);
-      throw new Error(msg);
+    if (!res.ok) {
+      var errMsg = 'HTTP ' + res.status;
+      if (res.data && res.data.error) {
+        errMsg = res.data.error.type ? (res.data.error.type + ': ' + res.data.error.message) : res.data.error.message;
+      }
+      throw new Error(errMsg);
     }
     btn.textContent = 'SAVED'; btn.style.borderColor='#00c47a';
     st.textContent = 'Saved to Airtable'; st.style.color='#00c47a';
+    // Also save hooks and rewrites to Scripts Generated table
+    saveScripts(ak, ab, m, result);
   })
   .catch(function(err){
     btn.disabled=false; btn.textContent='RETRY';
-    st.textContent='Error: '+err.message; st.style.color='#ff4d00';
-    console.error('Airtable error:', err);
+    var msg = err.message || 'Unknown error — check browser console';
+    st.textContent = msg; st.style.color='#ff4d00';
+    console.error('Airtable save failed:', err);
   });
 }
 
@@ -777,8 +876,8 @@ function downloadReport() {
     +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">'
     +[
       ['Hook Retention', d.hook_retention_pct+'%', d.hook_retention_pct],
-      ['Avg Watch Time', d.avg_watch_time_s+'s / '+dur+'s', (d.avg_watch_time_s/dur)*100],
-      ['CTA Tap Rate', d.cta_tap_rate_pct+'%', d.cta_tap_rate_pct*10],
+      ['Avg Watch Time (Est)', d.avg_watch_time_s+'s / '+dur+'s', (d.avg_watch_time_s/dur)*100],
+      ['CTA Tap Rate (Est)', d.cta_tap_rate_pct+'%', d.cta_tap_rate_pct*10],
       ['Authenticity', d.authenticity_score+'/100', d.authenticity_score]
     ].map(function(m){
       return '<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">'
@@ -841,6 +940,46 @@ function downloadReport() {
   btn.style.color = '#00c47a';
   btn.style.borderColor = '#00c47a40';
   setTimeout(function(){ btn.textContent='DOWNLOAD REPORT'; btn.style.color='#ff4d00'; btn.style.borderColor='#ff4d0040'; }, 2500);
+}
+
+function saveScripts(ak, ab, m, result) {
+  var scriptsUrl = 'https://api.airtable.com/v0/' + ab + '/' + encodeURIComponent('Scripts Generated');
+  var brand = m.brand || '';
+  var saves = [];
+
+  // Save each alternative hook
+  (result.alternative_hooks||[]).forEach(function(h) {
+    saves.push({fields:{
+      'Product Brief': brand,
+      'Hook Type': h.type,
+      'Full Script': h.text,
+      'Tested?': false,
+      'Result': 'Untested'
+    }});
+  });
+
+  // Save each rewrite variant
+  (result.rewrite_variants||[]).forEach(function(r) {
+    saves.push({fields:{
+      'Product Brief': brand,
+      'Hook Type': r.variant,
+      'Full Script': r.script,
+      'Tested?': false,
+      'Result': 'Untested'
+    }});
+  });
+
+  // Airtable batch create (up to 10 records)
+  if (saves.length > 0) {
+    fetch(scriptsUrl, {
+      method: 'POST',
+      headers: {'Authorization':'Bearer '+ak,'Content-Type':'application/json'},
+      body: JSON.stringify({records: saves.slice(0,10).map(function(s){return s;})})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){ console.log('Scripts saved:', d); })
+    .catch(function(e){ console.log('Scripts save failed (non-critical):', e); });
+  }
 }
 
 function resetUI() {
