@@ -410,8 +410,8 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6;}
 
     <!-- VIDEO UPLOAD -->
     <div id="mode-video">
-      <div class="upload-zone" id="drop-zone">
-        <input type="file" id="file-input" accept="video/*,.mp4,.mov,.avi,.webm">
+      <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" accept="video/*,.mp4,.mov,.avi,.webm" style="display:none">
         <div class="upload-icon">⬆</div>
         <div class="upload-title">Drop your UGC ad video here</div>
         <div class="upload-sub">MP4 · MOV · AVI · WEBM — Gemini watches it directly</div>
@@ -684,6 +684,9 @@ function switchMode(mode) {
     document.getElementById('mode-' + m).style.display = m === mode ? 'block' : 'none';
     document.getElementById('tab-' + m).classList.toggle('active', m === mode);
   });
+  // When switching away from video, disable the file input so it doesn't intercept clicks
+  const fi = document.getElementById('file-input');
+  if (fi) fi.style.pointerEvents = mode === 'video' ? 'auto' : 'none';
 }
 
 // ── FILE HANDLING ──────────────────────────────────────
