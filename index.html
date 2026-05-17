@@ -475,7 +475,7 @@ function runAnalysis() {
 }
 
 function geminiAnalyze(ak, file, url, brand, platform) {
-  var prompt = 'Analyze this UGC ad for "' + brand + '" on ' + platform + '. Return ONLY valid JSON:\n{"transcript":"<full transcript>","visual_hook":"<first 1-3s visual>","scene_pacing":"<fast/medium/slow description>","creator_energy":"<high/medium/low description>","product_visibility":"<when product appears>","text_overlays":"<on-screen text>","platform_fit":"<native feel for ' + platform + '>","hook_duration_s":<number>,"total_duration_s":<number>,"scene_count":<number>,"has_voiceover":<true/false>,"has_captions":<true/false>}';
+  var prompt = 'You are analyzing a UGC advertisement video for the brand "' + brand + '" intended for ' + platform + '. Watch the entire video carefully then respond with ONLY a JSON object, no other text, no markdown, no backticks. Use this exact structure: {"transcript": "write the full word for word transcript of everything spoken and shown on screen", "visual_hook": "describe exactly what happens visually in the first 1 to 3 seconds", "scene_pacing": "fast or medium or slow, then describe the cut frequency and energy level", "creator_energy": "high or medium or low, then describe the presenter confidence and authenticity", "product_visibility": "describe when and how clearly the product appears throughout the video", "text_overlays": "list all on-screen text captions and graphics you can see", "platform_fit": "describe how native and authentic this feels specifically for ' + platform + '", "hook_duration_s": 3, "total_duration_s": 30, "scene_count": 7, "has_voiceover": true, "has_captions": true}. Replace the example values with real values from the video.';
 
   if (file) {
     return fetch('https://generativelanguage.googleapis.com/upload/v1beta/files?key=' + ak, {
@@ -496,7 +496,7 @@ function geminiAnalyze(ak, file, url, brand, platform) {
       if (!ud.file || !ud.file.uri) throw new Error('Upload did not return file URI');
       var uri = ud.file.uri;
       var mt = file.type;
-      return new Promise(function(res) { setTimeout(res, 8000); })
+      return new Promise(function(res) { setTimeout(res, 12000); })
         .then(function() {
           return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + ak, {
             method: 'POST',
