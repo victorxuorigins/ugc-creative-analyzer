@@ -176,10 +176,7 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
     </div>
   </div>
 
-
-
-
-    <div class="drop-zone" id="dropzone" onclick="triggerFile()">
+  <div class="drop-zone" id="dropzone" onclick="triggerFile()">
       <div class="dicon">⬆</div>
       <div class="dtitle">Drop your UGC ad video here</div>
       <div class="dsub">MP4 · MOV · AVI · WEBM · Download from TikTok or Meta Ad Library first</div>
@@ -530,6 +527,7 @@ function safeJSON(text) {
 
 function renderResults(d, g, brand, platform, objective) {
   document.getElementById('loading').classList.remove('on');
+  document.getElementById('upload-section').style.display = 'none';
   document.getElementById('results').classList.add('on');
 
   var sc = d.creative_score || 0;
@@ -545,7 +543,7 @@ function renderResults(d, g, brand, platform, objective) {
     document.getElementById('g2').textContent = g.scene_pacing || '—';
     document.getElementById('g3').textContent = g.creator_energy || '—';
     document.getElementById('g4').textContent = g.product_visibility || '—';
-    document.getElementById('g5').textContent = g.text_overlays || 'None detected';
+    document.getElementById('g5').textContent = Array.isArray(g.text_overlays) ? g.text_overlays.join(', ') : (g.text_overlays || 'None detected');
     document.getElementById('g6').textContent = g.platform_fit || '—';
   }
 
@@ -672,7 +670,7 @@ function doSave() {
     'Scene Pacing: ' + (g.scene_pacing||'N/A'),
     'Creator Energy: ' + (g.creator_energy||'N/A'),
     'Product Visibility: ' + (g.product_visibility||'N/A'),
-    'Text Overlays: ' + (g.text_overlays||'None'),
+    'Text Overlays: ' + (Array.isArray(g.text_overlays) ? g.text_overlays.join(', ') : (g.text_overlays||'None')),
     'Platform Fit: ' + (g.platform_fit||'N/A'),
     '',
     timelineStr,
@@ -706,7 +704,7 @@ function doSave() {
     'Scene Pacing':         g.scene_pacing || '',
     'Creator Energy':       g.creator_energy || '',
     'Product Visibility':   g.product_visibility || '',
-    'Text Overlays':        g.text_overlays || '',
+    'Text Overlays':        (Array.isArray(g.text_overlays) ? g.text_overlays.join(', ') : (g.text_overlays || '')),
     'Platform Fit':         g.platform_fit || '',
     'Script':               (m.script||'').substring(0,5000),
     'Hook Analysis':        result.hook_analysis || '',
@@ -956,6 +954,7 @@ function resetUI() {
   document.getElementById('brand').value='';
   document.getElementById('niche').value='';
   document.getElementById('results').classList.remove('on');
+  document.getElementById('loading').classList.remove('on');
   document.getElementById('gpanel').style.display='none';
   document.getElementById('savecard').style.display='none';
   document.getElementById('upload-section').style.display='block';
