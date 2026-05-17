@@ -406,7 +406,6 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6;}
     <div class="mode-tabs">
       <button class="mode-tab active" id="tab-video" onclick="switchMode('video')">VIDEO FILE</button>
       <button class="mode-tab" id="tab-url" onclick="switchMode('url')">URL / LINK</button>
-      <button class="mode-tab" id="tab-script" onclick="switchMode('script')">SCRIPT ONLY</button>
     </div>
 
     <!-- VIDEO UPLOAD -->
@@ -439,14 +438,7 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6;}
       </div>
     </div>
 
-    <!-- SCRIPT ONLY -->
-    <div id="mode-script" style="display:none">
-      <div class="field-group" style="margin-bottom:18px;">
-        <label class="field-label">Ad Script / Transcript</label>
-        <textarea class="field-input" id="script-input" rows="6"
-          placeholder="Paste the full ad script or transcript here. Include any on-screen text, voiceover, and timing notes if available. The more detail, the sharper the analysis."></textarea>
-      </div>
-    </div>
+
 
     <!-- CONTEXT FIELDS -->
     <div class="form-grid">
@@ -465,11 +457,7 @@ textarea.field-input{resize:vertical;min-height:90px;line-height:1.6;}
           <option value="general">General</option>
         </select>
       </div>
-      <div class="field-group" id="duration-field">
-        <label class="field-label">Duration <span style="font-size:8px;color:#333">(script-only mode)</span></label>
-        <input type="text" class="field-input" id="duration-input"
-          placeholder="e.g. 15s, 30s — auto-detected from video">
-      </div>
+
       <div class="field-group">
         <label class="field-label">Ad Objective</label>
         <select class="field-select" id="objective-select">
@@ -692,7 +680,7 @@ function updateKeyStatus(inputId, statusId, prefix) {
 // ── MODE SWITCHING ─────────────────────────────────────
 function switchMode(mode) {
   currentMode = mode;
-  ['video','url','script'].forEach(m => {
+  ['video','url'].forEach(m => {
     document.getElementById('mode-' + m).style.display = m === mode ? 'block' : 'none';
     document.getElementById('tab-' + m).classList.toggle('active', m === mode);
   });
@@ -716,16 +704,14 @@ function setFile(file) {
   document.getElementById('file-name-display').textContent = file.name;
   document.getElementById('file-size-display').textContent = (file.size / (1024*1024)).toFixed(1) + ' MB';
   document.getElementById('file-preview').style.display = 'flex';
-  // Hide duration field - Gemini detects it automatically
-  document.getElementById('duration-field').style.display = 'none';
-  document.getElementById('duration-input').value = '';
+
 }
 
 function removeFile() {
   selectedFile = null;
   document.getElementById('file-preview').style.display = 'none';
   document.getElementById('file-input').value = '';
-  document.getElementById('duration-field').style.display = 'block';
+
 }
 
 async function pasteUrl() {
@@ -774,21 +760,18 @@ async function runAnalysis() {
   const brand = document.getElementById('brand-input').value.trim() || 'Unknown brand';
   const platform = document.getElementById('platform-select').value;
   const objective = document.getElementById('objective-select').value;
-  const duration = document.getElementById('duration-input').value.trim() || 'Unknown';
-  const script = document.getElementById('script-input').value.trim();
   const url = document.getElementById('url-input').value.trim();
   const hasVideo = currentMode === 'video' && selectedFile;
   const hasUrl = currentMode === 'url' && url;
-  const hasScript = currentMode === 'script' && script;
 
   if (!claudeKey || !claudeKey.startsWith('sk-ant')) {
     showError('Please enter your Anthropic API key to continue.'); return;
   }
-  if (!hasVideo && !hasUrl && !hasScript) {
-    showError('Please provide a video file, URL, or script to analyze.'); return;
+  if (!hasVideo && !hasUrl) {
+    showError('Please provide a video file or URL to analyze.'); return;
   }
-  if ((hasVideo || hasUrl) && (!geminiKey || !geminiKey.startsWith('AIza'))) {
-    showError('A Gemini API key is required to analyze video files and URLs. Add one above, or switch to Script Only mode.'); return;
+  if (!geminiKey || !geminiKey.startsWith('AIza')) {
+    showError('A Gemini API key is required to analyze videos. Add one above.'); return;
   }
 
   document.getElementById('upload-section').style.display = 'none';
@@ -797,28 +780,25 @@ async function runAnalysis() {
 
   try {
     let geminiInsights = null;
-    let transcriptText = '';
 
     // ── STEP 1: GEMINI VIDEO ANALYSIS ──
     if (hasVideo) {
       geminiInsights = await analyzeWithGemini(geminiKey, selectedFile, null, brand, platform);
-      transcriptText = geminiInsights.transcript || '';
     } else if (hasUrl) {
       geminiInsights = await analyzeWithGemini(geminiKey, null, url, brand, platform);
-      transcriptText = geminiInsights.transcript || '';
     }
 
     // ── STEP 2: CLAUDE CREATIVE INTELLIGENCE ──
     const claudeResult = await analyzeWithClaude(claudeKey, {
-      brand, platform, objective, duration,
-      script: hasScript ? script : transcriptText,
+      brand, platform, objective,
+      script: geminiInsights ? (geminiInsights.transcript || '') : '',
       geminiInsights,
-      hasVideoAnalysis: !!(hasVideo || hasUrl)
+      hasVideoAnalysis: true
     });
 
     stopLoading();
     analysisData = claudeResult;
-    analysisData._meta = { brand, platform, objective, duration, script: hasScript ? script : transcriptText };
+    analysisData._meta = { brand, platform, objective, script: geminiInsights ? (geminiInsights.transcript || '') : '' };
     geminiRawAnalysis = geminiInsights;
 
     renderResults(claudeResult, geminiInsights, brand, platform, objective);
@@ -1242,7 +1222,6 @@ function resetUI() {
   selectedFile = null; analysisData = null; geminiRawAnalysis = '';
   removeFile();
   document.getElementById('url-input').value = '';
-  document.getElementById('script-input').value = '';
   document.getElementById('brand-input').value = '';
   document.getElementById('results').classList.remove('active');
   document.getElementById('upload-section').style.display = 'block';
