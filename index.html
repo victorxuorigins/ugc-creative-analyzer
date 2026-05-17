@@ -6,1230 +6,695 @@
 <title>UGC Creative Intelligence — Victor Xu</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
-
 *{margin:0;padding:0;box-sizing:border-box;}
-
-body{
-  background:#080808;
-  color:#e8e4dc;
-  font-family:'DM Sans',sans-serif;
-  min-height:100vh;
-}
-
-.app{
-  max-width:1100px;
-  margin:0 auto;
-  padding:32px 24px;
-}
-
-/* HEADER */
-.header{
-  display:flex;align-items:center;
-  justify-content:space-between;
-  margin-bottom:32px;
-  padding-bottom:20px;
-  border-bottom:1px solid #1a1a1a;
-}
+body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-height:100vh;}
+.app{max-width:1100px;margin:0 auto;padding:32px 24px;}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #1a1a1a;}
 .header-left{display:flex;align-items:center;gap:12px;}
 .dot{width:9px;height:9px;background:#ff4d00;border-radius:50%;animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
-.header-title{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#666;text-transform:uppercase;}
+.htitle{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#666;text-transform:uppercase;}
 .header-right{display:flex;align-items:center;gap:10px;}
-.beta-badge{font-family:'Space Mono',monospace;font-size:9px;padding:3px 8px;background:#ff4d0012;border:1px solid #ff4d0035;color:#ff4d00;border-radius:3px;letter-spacing:0.1em;}
-.by-line{font-family:'Space Mono',monospace;font-size:9px;color:#333;letter-spacing:0.08em;}
-
-/* API KEY SECTION */
-.keys-section{
-  background:#0d0d0d;
-  border:1px solid #1a1a1a;
-  border-radius:10px;
-  padding:18px 20px;
-  margin-bottom:20px;
-}
-.keys-title{
-  font-family:'Space Mono',monospace;font-size:9px;
-  letter-spacing:0.15em;text-transform:uppercase;
-  color:#444;margin-bottom:14px;
-}
+.beta{font-family:'Space Mono',monospace;font-size:9px;padding:3px 8px;background:#ff4d0012;border:1px solid #ff4d0035;color:#ff4d00;border-radius:3px;letter-spacing:0.1em;}
+.byline{font-family:'Space Mono',monospace;font-size:9px;color:#333;letter-spacing:0.08em;}
+.keys-box{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:18px 20px;margin-bottom:20px;}
+.keys-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#444;margin-bottom:14px;}
 .keys-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.key-field{display:flex;flex-direction:column;gap:5px;}
-.key-label{
-  font-family:'Space Mono',monospace;font-size:9px;
-  letter-spacing:0.1em;text-transform:uppercase;
-  color:#555;display:flex;align-items:center;gap:8px;
-}
-.key-status{
-  font-size:8px;padding:1px 6px;border-radius:3px;
-  font-family:'Space Mono',monospace;letter-spacing:0.06em;
-}
-.key-set{background:#00c47a18;color:#00c47a;border:1px solid #00c47a25;}
-.key-unset{background:#ff4d0012;color:#ff4d00;border:1px solid #ff4d0025;}
-.key-input{
-  background:#080808;border:1px solid #1e1e1e;
-  border-radius:6px;padding:9px 12px;
-  color:#e8e4dc;font-family:'Space Mono',monospace;
-  font-size:11px;outline:none;transition:border-color 0.2s;
-  width:100%;
-}
-.key-input:focus{border-color:#ff4d00;}
-.key-hint{font-size:11px;color:#444;}
-.key-hint a{color:#555;text-decoration:none;}
-.key-hint a:hover{color:#888;}
-
-/* MODE TABS */
-.mode-tabs{
-  display:flex;gap:2px;margin-bottom:20px;
-  background:#0d0d0d;border:1px solid #1a1a1a;
-  border-radius:8px;padding:4px;
-}
-.mode-tab{
-  flex:1;padding:9px;text-align:center;
-  font-family:'Space Mono',monospace;font-size:10px;
-  letter-spacing:0.1em;text-transform:uppercase;
-  cursor:pointer;border-radius:5px;
-  color:#555;transition:all 0.2s;border:none;background:none;
-}
-.mode-tab.active{background:#ff4d00;color:#fff;}
-.mode-tab:not(.active):hover{color:#888;background:#111;}
-
-/* UPLOAD ZONE */
-.upload-zone{
-  border:1.5px dashed #222;border-radius:10px;
-  padding:48px 32px;text-align:center;cursor:pointer;
-  transition:all 0.2s;position:relative;
-  background:#0a0a0a;margin-bottom:18px;
-}
-.upload-zone:hover,.upload-zone.drag-over{border-color:#ff4d00;background:#ff4d0006;}
-.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-.upload-icon{font-size:36px;margin-bottom:12px;opacity:0.25;}
-.upload-title{font-size:16px;font-weight:500;margin-bottom:6px;}
-.upload-sub{font-size:12px;color:#444;font-family:'Space Mono',monospace;}
-
-.file-preview{
-  display:flex;align-items:center;gap:12px;
-  background:#0d0d0d;border:1px solid #1e1e1e;
-  border-radius:8px;padding:12px 16px;margin-bottom:18px;
-}
-.file-icon{font-size:20px;opacity:0.5;}
-.file-info{flex:1;}
-.file-name{font-family:'Space Mono',monospace;font-size:11px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.file-size{font-family:'Space Mono',monospace;font-size:10px;color:#444;margin-top:2px;}
-.file-remove{font-family:'Space Mono',monospace;font-size:10px;color:#333;cursor:pointer;padding:4px 8px;border-radius:4px;transition:color 0.2s;border:none;background:none;}
-.file-remove:hover{color:#ff4d00;}
-
-/* URL INPUT */
-.url-row{display:flex;gap:10px;margin-bottom:18px;}
-.url-input{
-  flex:1;background:#0d0d0d;border:1px solid #1a1a1a;
-  border-radius:8px;padding:10px 14px;color:#e8e4dc;
-  font-family:'DM Sans',sans-serif;font-size:13px;
-  outline:none;transition:border-color 0.2s;
-}
-.url-input:focus{border-color:#ff4d00;}
-.paste-btn{
-  padding:10px 16px;background:#111;border:1px solid #1e1e1e;
-  border-radius:8px;color:#666;font-family:'Space Mono',monospace;
-  font-size:10px;cursor:pointer;white-space:nowrap;transition:all 0.2s;
-}
+.kf{display:flex;flex-direction:column;gap:5px;}
+.klabel{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#555;display:flex;align-items:center;gap:8px;}
+.kstatus{font-size:8px;padding:1px 6px;border-radius:3px;font-family:'Space Mono',monospace;letter-spacing:0.06em;}
+.kset{background:#00c47a18;color:#00c47a;border:1px solid #00c47a25;}
+.kunset{background:#ff4d0012;color:#ff4d00;border:1px solid #ff4d0025;}
+.kinput{background:#080808;border:1px solid #1e1e1e;border-radius:6px;padding:9px 12px;color:#e8e4dc;font-family:'Space Mono',monospace;font-size:11px;outline:none;transition:border-color 0.2s;width:100%;}
+.kinput:focus{border-color:#ff4d00;}
+.khint{font-size:11px;color:#444;}
+.khint a{color:#555;text-decoration:none;}
+.khint a:hover{color:#888;}
+.tabs{display:flex;gap:2px;margin-bottom:20px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:4px;}
+.tab{flex:1;padding:9px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;border-radius:5px;color:#555;transition:all 0.2s;border:none;background:none;}
+.tab.on{background:#ff4d00;color:#fff;}
+.tab:not(.on):hover{color:#888;background:#111;}
+.drop-zone{border:1.5px dashed #222;border-radius:10px;padding:48px 32px;text-align:center;cursor:pointer;transition:all 0.2s;background:#0a0a0a;margin-bottom:18px;user-select:none;}
+.drop-zone:hover,.drop-zone.over{border-color:#ff4d00;background:#ff4d0006;}
+.dicon{font-size:36px;margin-bottom:12px;opacity:0.25;}
+.dtitle{font-size:16px;font-weight:500;margin-bottom:6px;}
+.dsub{font-size:12px;color:#444;font-family:'Space Mono',monospace;}
+.fprev{display:none;align-items:center;gap:12px;background:#0d0d0d;border:1px solid #1e1e1e;border-radius:8px;padding:12px 16px;margin-bottom:18px;}
+.ficon{font-size:20px;opacity:0.5;}
+.finfo{flex:1;}
+.fname{font-family:'Space Mono',monospace;font-size:11px;color:#888;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fsize{font-family:'Space Mono',monospace;font-size:10px;color:#444;margin-top:2px;}
+.frem{font-family:'Space Mono',monospace;font-size:10px;color:#333;cursor:pointer;padding:4px 8px;border-radius:4px;transition:color 0.2s;border:none;background:none;}
+.frem:hover{color:#ff4d00;}
+.url-row{display:flex;gap:10px;margin-bottom:12px;}
+.url-in{flex:1;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:8px;padding:10px 14px;color:#e8e4dc;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;}
+.url-in:focus{border-color:#ff4d00;}
+.paste-btn{padding:10px 16px;background:#111;border:1px solid #1e1e1e;border-radius:8px;color:#666;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;white-space:nowrap;transition:all 0.2s;}
 .paste-btn:hover{border-color:#333;color:#aaa;}
-
-/* FORM FIELDS */
+.url-note{font-size:12px;color:#333;margin-bottom:18px;font-family:'Space Mono',monospace;}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;}
-.field-group{display:flex;flex-direction:column;gap:5px;}
-.field-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;}
-.field-input,.field-select{
-  background:#0d0d0d;border:1px solid #1a1a1a;border-radius:7px;
-  padding:9px 13px;color:#e8e4dc;font-family:'DM Sans',sans-serif;
-  font-size:13px;outline:none;transition:border-color 0.2s;width:100%;
-}
-.field-input:focus,.field-select:focus{border-color:#ff4d00;}
-.field-select option{background:#0d0d0d;}
-textarea.field-input{resize:vertical;min-height:90px;line-height:1.6;}
-
-/* ANALYZE BTN */
-.analyze-btn{
-  width:100%;padding:15px;background:#ff4d00;color:#fff;
-  border:none;border-radius:8px;
-  font-family:'Space Mono',monospace;font-size:12px;
-  letter-spacing:0.12em;cursor:pointer;transition:all 0.2s;
-  text-transform:uppercase;margin-bottom:40px;
-}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.flabel{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;}
+.finput,.fselect{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:7px;padding:9px 13px;color:#e8e4dc;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;width:100%;}
+.finput:focus,.fselect:focus{border-color:#ff4d00;}
+.fselect option{background:#0d0d0d;}
+.at-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.analyze-btn{width:100%;padding:15px;background:#ff4d00;color:#fff;border:none;border-radius:8px;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;margin-bottom:40px;}
 .analyze-btn:hover:not(:disabled){background:#ff6420;transform:translateY(-1px);}
 .analyze-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
-
-/* ERROR */
-.error-msg{
-  background:#ff4d0010;border:1px solid #ff4d0030;
-  border-radius:8px;padding:12px 16px;
-  font-family:'Space Mono',monospace;font-size:11px;
-  color:#ff4d00;margin-bottom:18px;display:none;
-}
-.error-msg.active{display:block;}
-
-/* LOADING */
-.loading-state{text-align:center;padding:80px 24px;display:none;}
-.loading-state.active{display:block;}
-.loading-spinner{
-  width:40px;height:40px;border:2px solid #1a1a1a;
-  border-top-color:#ff4d00;border-radius:50%;
-  animation:spin 0.8s linear infinite;margin:0 auto 20px;
-}
+.errmsg{background:#ff4d0010;border:1px solid #ff4d0030;border-radius:8px;padding:12px 16px;font-family:'Space Mono',monospace;font-size:11px;color:#ff4d00;margin-bottom:18px;display:none;}
+.errmsg.on{display:block;}
+.loading{text-align:center;padding:80px 24px;display:none;}
+.loading.on{display:block;}
+.spinner{width:40px;height:40px;border:2px solid #1a1a1a;border-top-color:#ff4d00;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px;}
 @keyframes spin{to{transform:rotate(360deg)}}
-.loading-stage{
-  font-family:'Space Mono',monospace;font-size:10px;
-  letter-spacing:0.12em;text-transform:uppercase;
-  color:#555;margin-bottom:6px;
-}
-.loading-detail{font-size:13px;color:#444;}
-.loading-progress{
-  display:flex;gap:6px;justify-content:center;margin-top:20px;
-}
-.prog-dot{
-  width:6px;height:6px;border-radius:50%;background:#1e1e1e;
-  transition:background 0.3s;
-}
-.prog-dot.active{background:#ff4d00;}
-.prog-dot.done{background:#00c47a;}
-
-/* RESULTS */
+.lstage{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#555;margin-bottom:6px;}
+.ldetail{font-size:13px;color:#444;}
+.ldots{display:flex;gap:6px;justify-content:center;margin-top:20px;}
+.ld{width:6px;height:6px;border-radius:50%;background:#1e1e1e;transition:background 0.3s;}
+.ld.on{background:#ff4d00;}
 .results{display:none;}
-.results.active{display:block;}
-
-.results-header{
-  display:flex;align-items:flex-start;
-  justify-content:space-between;margin-bottom:28px;gap:20px;
-}
-.results-meta{}
-.results-title{
-  font-family:'Space Mono',monospace;font-size:10px;
-  letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:5px;
-}
-.results-brand{font-size:18px;font-weight:500;margin-bottom:3px;}
-.results-sub{font-size:13px;color:#555;}
-
+.results.on{display:block;}
+.rhead{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;gap:20px;}
+.rtitle{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:5px;}
+.rbrand{font-size:18px;font-weight:500;margin-bottom:3px;}
+.rsub{font-size:13px;color:#555;}
 .score-block{text-align:right;flex-shrink:0;}
-.score-label-sm{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;margin-bottom:4px;}
-.score-big{
-  font-family:'Space Mono',monospace;font-weight:700;
-  line-height:1;
-}
-.score-num{font-size:52px;}
-.score-max-text{font-size:18px;color:#333;}
-
-/* TIMELINE */
+.slabel{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;margin-bottom:4px;}
+.snum{font-family:'Space Mono',monospace;font-size:52px;font-weight:700;line-height:1;}
+.smax{font-family:'Space Mono',monospace;font-size:18px;color:#333;}
+.sg{color:#00ff88;} .sy{color:#ffb800;} .sr{color:#ff4d00;}
 .card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:24px;margin-bottom:16px;}
-.card-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:16px;}
-
+.clabel{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:16px;}
+.gcardwrap{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:22px;margin-bottom:16px;}
+.ghead{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.gbadge{font-family:'Space Mono',monospace;font-size:9px;padding:3px 8px;border-radius:4px;letter-spacing:0.08em;background:rgba(66,133,244,0.12);color:#4285f4;border:1px solid rgba(66,133,244,0.2);}
+.ggrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.gbox{background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:14px;}
+.gblabel{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#444;margin-bottom:6px;}
+.gbval{font-size:13px;color:#aaa;line-height:1.55;}
 .ruler{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:10px;color:#333;margin-bottom:6px;}
-.timeline-bar{display:flex;height:44px;border-radius:6px;overflow:hidden;gap:2px;margin-bottom:14px;}
+.tbar{display:flex;height:44px;border-radius:6px;overflow:hidden;gap:2px;margin-bottom:14px;}
 .seg{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1px;transition:filter 0.2s;}
 .seg:hover{filter:brightness(1.2);}
-.seg-hook{background:#ff4d00;}
-.seg-problem{background:#9b6fd4;}
-.seg-demo{background:#00b4ff;}
-.seg-social{background:#00c47a;}
-.seg-cta{background:#ffb800;}
-.seg-lbl{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:0.06em;color:#000;text-transform:uppercase;}
-.seg-t{font-family:'Space Mono',monospace;font-size:7px;color:rgba(0,0,0,0.55);}
-.timeline-notes{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:10px;color:#444;}
-
-/* METRICS */
-.metrics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.s-hook{background:#ff4d00;} .s-problem{background:#9b6fd4;} .s-demo{background:#00b4ff;} .s-social{background:#00c47a;} .s-cta{background:#ffb800;}
+.slbl{font-family:'Space Mono',monospace;font-size:8px;font-weight:700;letter-spacing:0.06em;color:#000;text-transform:uppercase;}
+.st{font-family:'Space Mono',monospace;font-size:7px;color:rgba(0,0,0,0.55);}
+.tnotes{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:10px;color:#444;}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
 .metric{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:18px;}
-.metric-lbl{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.12em;color:#444;text-transform:uppercase;margin-bottom:10px;}
-.metric-track{height:2px;background:#151515;border-radius:1px;margin-bottom:8px;overflow:hidden;}
-.metric-fill{height:100%;background:#ff4d00;border-radius:1px;transition:width 1s ease;}
-.metric-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:#e8e4dc;}
-
-/* ANALYSIS CARDS */
-.analysis-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.mlabel{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.12em;color:#444;text-transform:uppercase;margin-bottom:10px;}
+.mtrack{height:2px;background:#151515;border-radius:1px;margin-bottom:8px;overflow:hidden;}
+.mfill{height:100%;background:#ff4d00;border-radius:1px;transition:width 1s ease;width:0;}
+.mval{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:#e8e4dc;}
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
 .acard{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:22px;}
-.acard-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;margin-bottom:14px;}
-.acard-text{font-size:13px;line-height:1.75;color:#777;}
-.acard-text strong{color:#ccc;font-weight:500;}
-
-.score-pill{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:3px 9px;border-radius:4px;
-  font-family:'Space Mono',monospace;font-size:10px;margin-bottom:10px;
-}
-.pill-high{background:#00c47a18;color:#00c47a;border:1px solid #00c47a28;}
-.pill-mid{background:#ffb80018;color:#ffb800;border:1px solid #ffb80028;}
-.pill-low{background:#ff4d0018;color:#ff4d00;border:1px solid #ff4d0028;}
-
-.auth-bar{height:5px;background:#111;border-radius:3px;overflow:hidden;margin:8px 0;}
-.auth-fill{height:100%;background:linear-gradient(90deg,#ff4d00,#ffb800,#00c47a);border-radius:3px;transition:width 1s ease;}
-
-/* GEMINI INSIGHTS */
-.gemini-card{
-  background:#0d0d0d;border:1px solid #1a1a1a;
-  border-radius:11px;padding:22px;margin-bottom:16px;
-}
-.gemini-header{
-  display:flex;align-items:center;gap:10px;margin-bottom:16px;
-}
-.gemini-badge{
-  font-family:'Space Mono',monospace;font-size:9px;
-  padding:3px 8px;border-radius:4px;letter-spacing:0.08em;
-  background:rgba(66,133,244,0.12);color:#4285f4;
-  border:1px solid rgba(66,133,244,0.2);
-}
-.gemini-insight-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-.g-insight{
-  background:#111;border:1px solid #1a1a1a;
-  border-radius:8px;padding:14px;
-}
-.g-insight-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:#444;margin-bottom:6px;}
-.g-insight-val{font-size:13px;color:#aaa;line-height:1.55;}
-.g-insight-val strong{color:#e8e4dc;font-weight:500;}
-
-/* RECS */
-.recs-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:24px;margin-bottom:16px;}
-.rec-item{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #131313;}
-.rec-item:last-child{border-bottom:none;padding-bottom:0;}
-.rec-num{font-family:'Space Mono',monospace;font-size:11px;color:#ff4d00;width:22px;flex-shrink:0;padding-top:1px;}
-.rec-title{font-size:13px;font-weight:500;color:#ddd;margin-bottom:3px;}
-.rec-desc{font-size:12px;color:#555;line-height:1.6;}
-
-/* HOOKS */
-.hooks-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:24px;margin-bottom:16px;}
-.hook-item{background:#111;border:1px solid #1a1a1a;border-radius:7px;padding:14px;margin-bottom:8px;transition:border-color 0.2s;}
-.hook-item:last-child{margin-bottom:0;}
-.hook-item:hover{border-color:#2a2a2a;}
-.hook-type{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#ff4d00;text-transform:uppercase;margin-bottom:5px;}
-.hook-text{font-size:13px;color:#ccc;line-height:1.55;}
-
-/* REWRITES */
-.rewrites-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:24px;margin-bottom:16px;}
-.rewrite-block{border-left:2px solid #ff4d00;padding-left:14px;margin-bottom:18px;}
-.rewrite-block:last-child{margin-bottom:0;}
-.rewrite-variant{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#ff4d00;text-transform:uppercase;margin-bottom:7px;}
-.rewrite-text{font-size:13px;color:#777;line-height:1.75;}
-
-/* SAVE */
-.save-card{
-  background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;
-  padding:20px 24px;margin-bottom:16px;
-  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
-}
-.save-info{font-size:13px;color:#555;}
-.save-info strong{color:#777;font-weight:500;}
-.save-btn{
-  padding:9px 18px;background:transparent;
-  border:1px solid #00c47a40;border-radius:6px;
-  color:#00c47a;font-family:'Space Mono',monospace;
-  font-size:10px;letter-spacing:0.08em;cursor:pointer;
-  transition:all 0.2s;text-transform:uppercase;white-space:nowrap;
-}
-.save-btn:hover{background:#00c47a12;}
-.save-btn:disabled{opacity:0.35;cursor:not-allowed;}
-.save-status{font-family:'Space Mono',monospace;font-size:10px;color:#444;}
-
-/* AIRTABLE FIELDS */
-.airtable-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
-
-/* FOOTER */
-.results-footer{display:flex;gap:20px;padding:18px 0;border-top:1px solid #131313;margin-top:8px;}
-.footer-item{font-family:'Space Mono',monospace;font-size:10px;color:#333;display:flex;align-items:center;gap:5px;}
-.footer-item::before{content:'';width:5px;height:5px;border-radius:50%;background:#1e1e1e;}
-
-.reset-btn{
-  width:100%;padding:13px;background:transparent;color:#444;
-  border:1px solid #1a1a1a;border-radius:8px;
-  font-family:'Space Mono',monospace;font-size:11px;
-  letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;
-  text-transform:uppercase;margin-top:6px;
-}
-.reset-btn:hover{border-color:#333;color:#777;}
-
-/* SCORE COLOR */
-.score-green{color:#00ff88;}
-.score-yellow{color:#ffb800;}
-.score-red{color:#ff4d00;}
-
-@media(max-width:680px){
-  .metrics-grid{grid-template-columns:1fr 1fr;}
-  .analysis-grid{grid-template-columns:1fr;}
-  .form-grid{grid-template-columns:1fr;}
-  .keys-grid{grid-template-columns:1fr;}
-  .gemini-insight-grid{grid-template-columns:1fr;}
-  .airtable-row{grid-template-columns:1fr;}
-}
+.actitle{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;margin-bottom:14px;}
+.actext{font-size:13px;line-height:1.75;color:#777;}
+.actext strong{color:#ccc;font-weight:500;}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:4px;font-family:'Space Mono',monospace;font-size:10px;margin-bottom:10px;}
+.ph{background:#00c47a18;color:#00c47a;border:1px solid #00c47a28;}
+.pm{background:#ffb80018;color:#ffb800;border:1px solid #ffb80028;}
+.pl{background:#ff4d0018;color:#ff4d00;border:1px solid #ff4d0028;}
+.authbar{height:5px;background:#111;border-radius:3px;overflow:hidden;margin:8px 0;}
+.authfill{height:100%;background:linear-gradient(90deg,#ff4d00,#ffb800,#00c47a);border-radius:3px;transition:width 1s ease;}
+.recscard{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:24px;margin-bottom:16px;}
+.recitem{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid #131313;}
+.recitem:last-child{border-bottom:none;padding-bottom:0;}
+.recnum{font-family:'Space Mono',monospace;font-size:11px;color:#ff4d00;width:22px;flex-shrink:0;padding-top:1px;}
+.rectitle{font-size:13px;font-weight:500;color:#ddd;margin-bottom:3px;}
+.recdesc{font-size:12px;color:#555;line-height:1.6;}
+.hookscard{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:24px;margin-bottom:16px;}
+.hookitem{background:#111;border:1px solid #1a1a1a;border-radius:7px;padding:14px;margin-bottom:8px;transition:border-color 0.2s;}
+.hookitem:last-child{margin-bottom:0;}
+.hookitem:hover{border-color:#2a2a2a;}
+.hooktype{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#ff4d00;text-transform:uppercase;margin-bottom:5px;}
+.hooktext{font-size:13px;color:#ccc;line-height:1.55;}
+.rwcard{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:24px;margin-bottom:16px;}
+.rwblock{border-left:2px solid #ff4d00;padding-left:14px;margin-bottom:18px;}
+.rwblock:last-child{margin-bottom:0;}
+.rwvar{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#ff4d00;text-transform:uppercase;margin-bottom:7px;}
+.rwtext{font-size:13px;color:#777;line-height:1.75;}
+.savecard{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:20px 24px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.saveinfo{font-size:13px;color:#555;}
+.saveinfo strong{color:#777;font-weight:500;}
+.savebtn{padding:9px 18px;background:transparent;border:1px solid #00c47a40;border-radius:6px;color:#00c47a;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;}
+.savebtn:hover{background:#00c47a12;}
+.savebtn:disabled{opacity:0.35;cursor:not-allowed;}
+.savestatus{font-family:'Space Mono',monospace;font-size:10px;color:#444;}
+.rfooter{display:flex;gap:20px;padding:18px 0;border-top:1px solid #131313;margin-top:8px;}
+.fi{font-family:'Space Mono',monospace;font-size:10px;color:#333;display:flex;align-items:center;gap:5px;}
+.fi::before{content:'';width:5px;height:5px;border-radius:50%;background:#1e1e1e;}
+.btnrow{display:flex;gap:10px;margin-top:6px;}
+.rbtn{flex:1;padding:13px;background:transparent;color:#444;border:1px solid #1a1a1a;border-radius:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.rbtn:hover{border-color:#333;color:#777;}
+.sbtn{flex:1;padding:13px;background:transparent;color:#ff4d00;border:1px solid #ff4d0040;border-radius:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;}
+.sbtn:hover{background:#ff4d0010;}
+@media(max-width:680px){.mgrid{grid-template-columns:1fr 1fr;}.agrid{grid-template-columns:1fr;}.form-grid{grid-template-columns:1fr;}.keys-grid{grid-template-columns:1fr;}.ggrid{grid-template-columns:1fr;}.at-row{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-left">
-      <div class="dot"></div>
-      <span class="header-title">UGC Creative Intelligence</span>
-    </div>
-    <div class="header-right">
-      <span class="by-line">BY VICTOR XU</span>
-      <span class="beta-badge">BETA</span>
-    </div>
+<div class="header">
+  <div class="header-left">
+    <div class="dot"></div>
+    <span class="htitle">UGC Creative Intelligence</span>
   </div>
-
-  <!-- UPLOAD SECTION -->
-  <div id="upload-section">
-
-    <!-- API KEYS -->
-    <div class="keys-section">
-      <div class="keys-title">API Keys — entered at runtime, never stored</div>
-      <div class="keys-grid">
-        <div class="key-field">
-          <div class="key-label">
-            Gemini API Key
-            <span class="key-status key-unset" id="gemini-status">NOT SET</span>
-          </div>
-          <input type="password" class="key-input" id="gemini-key"
-            placeholder="AIzaSy..."
-            oninput="updateKeyStatus('gemini-key','gemini-status','AIza')">
-          <span class="key-hint">Free at <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> — watches the video</span>
-        </div>
-        <div class="key-field">
-          <div class="key-label">
-            Anthropic API Key
-            <span class="key-status key-unset" id="claude-status">NOT SET</span>
-          </div>
-          <input type="password" class="key-input" id="claude-key"
-            placeholder="sk-ant-api03-..."
-            oninput="updateKeyStatus('claude-key','claude-status','sk-ant')">
-          <span class="key-hint">~$5 credits at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> — scores + rewrites</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- MODE TABS -->
-    <div class="mode-tabs">
-      <button class="mode-tab active" id="tab-video" onclick="switchMode('video')">VIDEO FILE</button>
-      <button class="mode-tab" id="tab-url" onclick="switchMode('url')">URL / LINK</button>
-    </div>
-
-    <!-- VIDEO UPLOAD -->
-    <div id="mode-video">
-      <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
-        <input type="file" id="file-input" accept="video/*,.mp4,.mov,.avi,.webm" style="display:none">
-        <div class="upload-icon">⬆</div>
-        <div class="upload-title">Drop your UGC ad video here</div>
-        <div class="upload-sub">MP4 · MOV · AVI · WEBM — Gemini watches it directly</div>
-      </div>
-      <div id="file-preview" class="file-preview" style="display:none">
-        <span class="file-icon">🎬</span>
-        <div class="file-info">
-          <div class="file-name" id="file-name-display"></div>
-          <div class="file-size" id="file-size-display"></div>
-        </div>
-        <button class="file-remove" onclick="removeFile()">✕ REMOVE</button>
-      </div>
-    </div>
-
-    <!-- URL INPUT -->
-    <div id="mode-url" style="display:none">
-      <div class="url-row">
-        <input type="text" class="url-input" id="url-input"
-          placeholder="Paste TikTok, Instagram, YouTube, or Google Drive URL...">
-        <button class="paste-btn" onclick="pasteUrl()">PASTE</button>
-      </div>
-      <div style="font-size:12px;color:#333;margin-bottom:18px;font-family:'Space Mono',monospace;">
-        Note: direct video URLs work best. For social links, paste the script in Script Only mode for most accurate analysis.
-      </div>
-    </div>
-
-
-
-    <!-- CONTEXT FIELDS -->
-    <div class="form-grid">
-      <div class="field-group">
-        <label class="field-label">Brand / Product</label>
-        <input type="text" class="field-input" id="brand-input"
-          placeholder="e.g. Anker, skincare brand, fitness app...">
-      </div>
-      <div class="field-group">
-        <label class="field-label">Platform</label>
-        <select class="field-select" id="platform-select">
-          <option value="tiktok">TikTok</option>
-          <option value="instagram">Instagram Reels</option>
-          <option value="youtube">YouTube Shorts</option>
-          <option value="facebook">Facebook / Meta</option>
-          <option value="general">General</option>
-        </select>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Ad Objective</label>
-        <select class="field-select" id="objective-select">
-          <option value="conversion">Conversion / Purchase</option>
-          <option value="awareness">Brand Awareness</option>
-          <option value="app_install">App Install</option>
-          <option value="lead_gen">Lead Generation</option>
-          <option value="traffic">Traffic / Click</option>
-        </select>
-      </div>
-    </div>
-
-    <!-- AIRTABLE (OPTIONAL) -->
-    <div class="airtable-row">
-      <div class="key-field">
-        <div class="key-label">Airtable Key <span style="color:#333;font-size:8px;letter-spacing:0.06em">(OPTIONAL — saves to library)</span></div>
-        <input type="password" class="key-input" id="at-key" placeholder="patXXXXXX...">
-      </div>
-      <div class="key-field">
-        <div class="key-label">Airtable Base ID <span style="color:#333;font-size:8px;letter-spacing:0.06em">(OPTIONAL)</span></div>
-        <input type="text" class="key-input" id="at-base" placeholder="appXXXXXX...">
-      </div>
-    </div>
-
-    <div class="error-msg" id="error-msg"></div>
-
-    <button class="analyze-btn" id="analyze-btn" onclick="runAnalysis()">
-      ⚡ ANALYZE CREATIVE
-    </button>
+  <div class="header-right">
+    <span class="byline">BY VICTOR XU</span>
+    <span class="beta">BETA</span>
   </div>
-
-  <!-- LOADING -->
-  <div class="loading-state" id="loading-state">
-    <div class="loading-spinner"></div>
-    <div class="loading-stage" id="loading-stage">INITIALIZING</div>
-    <div class="loading-detail" id="loading-detail">Preparing analysis...</div>
-    <div class="loading-progress">
-      <div class="prog-dot" id="pd1"></div>
-      <div class="prog-dot" id="pd2"></div>
-      <div class="prog-dot" id="pd3"></div>
-      <div class="prog-dot" id="pd4"></div>
-    </div>
-  </div>
-
-  <!-- RESULTS -->
-  <div class="results" id="results">
-
-    <div class="results-header">
-      <div class="results-meta">
-        <div class="results-title">Creative Intelligence Report</div>
-        <div class="results-brand" id="r-brand">—</div>
-        <div class="results-sub" id="r-sub">—</div>
-      </div>
-      <div class="score-block">
-        <div class="score-label-sm">Creative Score</div>
-        <div class="score-big">
-          <span class="score-num" id="r-score">—</span><span class="score-max-text">/100</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- GEMINI VISUAL INSIGHTS -->
-    <div class="gemini-card" id="gemini-section" style="display:none">
-      <div class="gemini-header">
-        <div class="card-label" style="margin:0">Visual Analysis</div>
-        <span class="gemini-badge">GEMINI 2.5 FLASH LITE</span>
-      </div>
-      <div class="gemini-insight-grid">
-        <div class="g-insight">
-          <div class="g-insight-label">Visual Hook</div>
-          <div class="g-insight-val" id="g-visual-hook">—</div>
-        </div>
-        <div class="g-insight">
-          <div class="g-insight-label">Scene Pacing</div>
-          <div class="g-insight-val" id="g-scene-pacing">—</div>
-        </div>
-        <div class="g-insight">
-          <div class="g-insight-label">Creator Energy</div>
-          <div class="g-insight-val" id="g-creator-energy">—</div>
-        </div>
-        <div class="g-insight">
-          <div class="g-insight-label">Product Visibility</div>
-          <div class="g-insight-val" id="g-product-vis">—</div>
-        </div>
-        <div class="g-insight">
-          <div class="g-insight-label">Text Overlays</div>
-          <div class="g-insight-val" id="g-text-overlays">—</div>
-        </div>
-        <div class="g-insight">
-          <div class="g-insight-label">Platform Fit</div>
-          <div class="g-insight-val" id="g-platform-fit">—</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TIMELINE -->
-    <div class="card">
-      <div class="card-label">Video Structure Timeline</div>
-      <div class="ruler" id="r-ruler"></div>
-      <div class="timeline-bar" id="r-timeline"></div>
-      <div class="timeline-notes" id="r-notes"></div>
-    </div>
-
-    <!-- METRICS -->
-    <div class="metrics-grid">
-      <div class="metric">
-        <div class="metric-lbl">Hook Retention</div>
-        <div class="metric-track"><div class="metric-fill" id="m-hook-bar" style="width:0"></div></div>
-        <div class="metric-val" id="m-hook">—</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Avg Watch Time</div>
-        <div class="metric-track"><div class="metric-fill" id="m-watch-bar" style="width:0"></div></div>
-        <div class="metric-val" id="m-watch">—</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">CTA Tap Rate</div>
-        <div class="metric-track"><div class="metric-fill" id="m-cta-bar" style="width:0"></div></div>
-        <div class="metric-val" id="m-cta">—</div>
-      </div>
-      <div class="metric">
-        <div class="metric-lbl">Authenticity</div>
-        <div class="metric-track"><div class="metric-fill" id="m-auth-bar" style="width:0"></div></div>
-        <div class="metric-val" id="m-auth">—</div>
-      </div>
-    </div>
-
-    <!-- ANALYSIS CARDS -->
-    <div class="analysis-grid">
-      <div class="acard">
-        <div class="acard-title">Hook Analysis</div>
-        <div id="r-hook-pill"></div>
-        <div class="acard-text" id="r-hook-analysis">—</div>
-      </div>
-      <div class="acard">
-        <div class="acard-title">Authenticity</div>
-        <div style="font-family:'Space Mono',monospace;font-size:26px;font-weight:700;color:#e8e4dc;margin-bottom:6px;" id="r-auth-score">—</div>
-        <div class="auth-bar"><div class="auth-fill" id="r-auth-bar" style="width:0"></div></div>
-        <div class="acard-text" id="r-auth-analysis">—</div>
-      </div>
-      <div class="acard">
-        <div class="acard-title">Pacing Analysis</div>
-        <div class="acard-text" id="r-pacing">—</div>
-      </div>
-      <div class="acard">
-        <div class="acard-title">CTA Analysis</div>
-        <div class="acard-text" id="r-cta">—</div>
-      </div>
-    </div>
-
-    <!-- RECOMMENDATIONS -->
-    <div class="recs-card">
-      <div class="card-label">Improvement Recommendations</div>
-      <div id="r-recs"></div>
-    </div>
-
-    <!-- HOOKS -->
-    <div class="hooks-card">
-      <div class="card-label">Alternative Hook Ideas</div>
-      <div id="r-hooks"></div>
-    </div>
-
-    <!-- REWRITES -->
-    <div class="rewrites-card">
-      <div class="card-label">Rewrite Variants</div>
-      <div id="r-rewrites"></div>
-    </div>
-
-    <!-- SAVE TO AIRTABLE -->
-    <div class="save-card" id="save-card" style="display:none">
-      <div class="save-info"><strong>Save to ad library</strong> — adds this analysis to your Airtable knowledge base</div>
-      <span class="save-status" id="save-status"></span>
-      <button class="save-btn" id="save-btn" onclick="saveToAirtable()">SAVE TO LIBRARY</button>
-    </div>
-
-    <div class="results-footer">
-      <span class="footer-item" id="f-platform"></span>
-      <span class="footer-item" id="f-objective"></span>
-      <span class="footer-item">Gemini 2.5 Flash Lite + Claude Sonnet 4</span>
-    </div>
-
-    <div style="display:flex;gap:10px;margin-top:6px;">
-      <button class="reset-btn" style="flex:1" onclick="resetUI()">↺ ANALYZE ANOTHER AD</button>
-      <button class="reset-btn" style="flex:1;border-color:#ff4d0040;color:#ff4d00;" onclick="shareResults()" id="share-btn">↗ COPY SHAREABLE SUMMARY</button>
-    </div>
-  </div>
-
 </div>
 
+<div id="upload-section">
+  <div class="keys-box">
+    <div class="keys-title">API Keys — entered at runtime, never stored</div>
+    <div class="keys-grid">
+      <div class="kf">
+        <div class="klabel">Gemini API Key <span class="kstatus kunset" id="gs">NOT SET</span></div>
+        <input type="password" class="kinput" id="gkey" placeholder="AIzaSy..." oninput="updateKey('gkey','gs','AIza')">
+        <span class="khint">Free at <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a> — watches the video</span>
+      </div>
+      <div class="kf">
+        <div class="klabel">Anthropic API Key <span class="kstatus kunset" id="cs">NOT SET</span></div>
+        <input type="password" class="kinput" id="ckey" placeholder="sk-ant-api03-..." oninput="updateKey('ckey','cs','sk-ant')">
+        <span class="khint">~$5 at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> — scores + rewrites</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" id="tab-video" onclick="switchMode('video')">VIDEO FILE</button>
+    <button class="tab" id="tab-url" onclick="switchMode('url')">URL / LINK</button>
+  </div>
+
+  <div id="mode-video">
+    <div class="drop-zone" id="dropzone" onclick="triggerFile()">
+      <div class="dicon">⬆</div>
+      <div class="dtitle">Drop your UGC ad video here</div>
+      <div class="dsub">MP4 · MOV · AVI · WEBM — Gemini watches it directly</div>
+    </div>
+    <input type="file" id="fileinput" accept="video/*,.mp4,.mov,.avi,.webm" style="display:none">
+    <div class="fprev" id="fprev">
+      <span class="ficon">🎬</span>
+      <div class="finfo">
+        <div class="fname" id="fname"></div>
+        <div class="fsize" id="fsize"></div>
+      </div>
+      <button class="frem" onclick="removeFile()">✕ REMOVE</button>
+    </div>
+  </div>
+
+  <div id="mode-url" style="display:none">
+    <div class="url-row">
+      <input type="text" class="url-in" id="urlin" placeholder="Paste TikTok, Instagram, YouTube, or Google Drive URL...">
+      <button class="paste-btn" onclick="doPaste()">PASTE</button>
+    </div>
+    <div class="url-note">Direct video URLs work best. For social links, download and upload as a file for most accurate analysis.</div>
+  </div>
+
+  <div class="form-grid">
+    <div class="fg">
+      <label class="flabel">Brand / Product</label>
+      <input type="text" class="finput" id="brand" placeholder="e.g. Anker, skincare brand...">
+    </div>
+    <div class="fg">
+      <label class="flabel">Platform</label>
+      <select class="fselect" id="platform">
+        <option value="tiktok">TikTok</option>
+        <option value="instagram">Instagram Reels</option>
+        <option value="youtube">YouTube Shorts</option>
+        <option value="facebook">Facebook / Meta</option>
+        <option value="general">General</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Ad Objective</label>
+      <select class="fselect" id="objective">
+        <option value="conversion">Conversion / Purchase</option>
+        <option value="awareness">Brand Awareness</option>
+        <option value="app_install">App Install</option>
+        <option value="lead_gen">Lead Generation</option>
+        <option value="traffic">Traffic / Click</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="flabel">Product Niche</label>
+      <input type="text" class="finput" id="niche" placeholder="e.g. consumer tech, skincare...">
+    </div>
+  </div>
+
+  <div class="at-row">
+    <div class="kf">
+      <div class="klabel">Airtable Key <span style="color:#2a2a2a;font-size:8px">(OPTIONAL)</span></div>
+      <input type="password" class="kinput" id="atkey" placeholder="patXXXXXX...">
+    </div>
+    <div class="kf">
+      <div class="klabel">Airtable Base ID <span style="color:#2a2a2a;font-size:8px">(OPTIONAL)</span></div>
+      <input type="text" class="kinput" id="atbase" placeholder="appXXXXXX...">
+    </div>
+  </div>
+
+  <div class="errmsg" id="errmsg"></div>
+  <button class="analyze-btn" onclick="runAnalysis()">ANALYZE CREATIVE</button>
+</div>
+
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <div class="lstage" id="lstage">INITIALIZING</div>
+  <div class="ldetail" id="ldetail">Preparing analysis...</div>
+  <div class="ldots">
+    <div class="ld" id="ld1"></div><div class="ld" id="ld2"></div>
+    <div class="ld" id="ld3"></div><div class="ld" id="ld4"></div>
+  </div>
+</div>
+
+<div class="results" id="results">
+  <div class="rhead">
+    <div>
+      <div class="rtitle">Creative Intelligence Report</div>
+      <div class="rbrand" id="rbrand">—</div>
+      <div class="rsub" id="rsub">—</div>
+    </div>
+    <div class="score-block">
+      <div class="slabel">Creative Score</div>
+      <div><span class="snum" id="rscore">—</span><span class="smax">/100</span></div>
+    </div>
+  </div>
+
+  <div class="gcardwrap" id="gpanel" style="display:none">
+    <div class="ghead">
+      <div class="clabel" style="margin:0">Visual Analysis</div>
+      <span class="gbadge">GEMINI 2.5 FLASH LITE</span>
+    </div>
+    <div class="ggrid">
+      <div class="gbox"><div class="gblabel">Visual Hook</div><div class="gbval" id="g1">—</div></div>
+      <div class="gbox"><div class="gblabel">Scene Pacing</div><div class="gbval" id="g2">—</div></div>
+      <div class="gbox"><div class="gblabel">Creator Energy</div><div class="gbval" id="g3">—</div></div>
+      <div class="gbox"><div class="gblabel">Product Visibility</div><div class="gbval" id="g4">—</div></div>
+      <div class="gbox"><div class="gblabel">Text Overlays</div><div class="gbval" id="g5">—</div></div>
+      <div class="gbox"><div class="gblabel">Platform Fit</div><div class="gbval" id="g6">—</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="clabel">Video Structure Timeline</div>
+    <div class="ruler" id="ruler"></div>
+    <div class="tbar" id="tbar"></div>
+    <div class="tnotes" id="tnotes"></div>
+  </div>
+
+  <div class="mgrid">
+    <div class="metric"><div class="mlabel">Hook Retention</div><div class="mtrack"><div class="mfill" id="mf1"></div></div><div class="mval" id="mv1">—</div></div>
+    <div class="metric"><div class="mlabel">Avg Watch Time</div><div class="mtrack"><div class="mfill" id="mf2"></div></div><div class="mval" id="mv2">—</div></div>
+    <div class="metric"><div class="mlabel">CTA Tap Rate</div><div class="mtrack"><div class="mfill" id="mf3"></div></div><div class="mval" id="mv3">—</div></div>
+    <div class="metric"><div class="mlabel">Authenticity</div><div class="mtrack"><div class="mfill" id="mf4"></div></div><div class="mval" id="mv4">—</div></div>
+  </div>
+
+  <div class="agrid">
+    <div class="acard"><div class="actitle">Hook Analysis</div><div id="hookpill"></div><div class="actext" id="hooktext">—</div></div>
+    <div class="acard">
+      <div class="actitle">Authenticity</div>
+      <div style="font-family:'Space Mono',monospace;font-size:26px;font-weight:700;color:#e8e4dc;margin-bottom:6px;" id="authscore">—</div>
+      <div class="authbar"><div class="authfill" id="authfill" style="width:0"></div></div>
+      <div class="actext" id="authtext">—</div>
+    </div>
+    <div class="acard"><div class="actitle">Pacing Analysis</div><div class="actext" id="pacingtext">—</div></div>
+    <div class="acard"><div class="actitle">CTA Analysis</div><div class="actext" id="ctatext">—</div></div>
+  </div>
+
+  <div class="recscard"><div class="clabel">Improvement Recommendations</div><div id="recslist"></div></div>
+  <div class="hookscard"><div class="clabel">Alternative Hook Ideas</div><div id="hookslist"></div></div>
+  <div class="rwcard"><div class="clabel">Rewrite Variants</div><div id="rwlist"></div></div>
+
+  <div class="savecard" id="savecard" style="display:none">
+    <div class="saveinfo"><strong>Save to ad library</strong> — adds to your Airtable knowledge base</div>
+    <span class="savestatus" id="savestatus"></span>
+    <button class="savebtn" id="savebtn" onclick="doSave()">SAVE TO LIBRARY</button>
+  </div>
+
+  <div class="rfooter">
+    <span class="fi" id="fp"></span>
+    <span class="fi" id="fo"></span>
+    <span class="fi">Gemini 2.5 Flash Lite + Claude Sonnet 4</span>
+  </div>
+
+  <div class="btnrow">
+    <button class="rbtn" onclick="resetUI()">ANALYZE ANOTHER</button>
+    <button class="sbtn" id="sharebtn" onclick="doShare()">COPY REPORT</button>
+  </div>
+</div>
+
+</div>
 <script>
-// ── STATE ──────────────────────────────────────────────
-let selectedFile = null;
-let currentMode = 'video';
-let analysisData = null;
-let geminiRawAnalysis = '';
+var selFile = null;
+var mode = 'video';
+var result = null;
+var lvl = null;
 
-const SEG_COLORS = {hook:'seg-hook',problem:'seg-problem',product_demo:'seg-demo',social_proof:'seg-social',cta:'seg-cta'};
-const SEG_LABELS = {hook:'HOOK',problem:'PROBLEM',product_demo:'PRODUCT DEMO',social_proof:'SOCIAL PROOF',cta:'CTA'};
-
-const LOADING_STAGES = [
-  {stage:'UPLOADING VIDEO',detail:'Sending to Gemini 2.5 Flash Lite for visual analysis...',dots:[1]},
-  {stage:'GEMINI WATCHING',detail:'AI is analyzing your video frame by frame...',dots:[1,2]},
-  {stage:'EXTRACTING INSIGHTS',detail:'Identifying hook, pacing, visual elements...',dots:[1,2,3]},
-  {stage:'CLAUDE SCORING',detail:'Applying creative intelligence rubric...',dots:[1,2,3,4]},
+var SCOLS = {hook:'s-hook',problem:'s-problem',product_demo:'s-demo',social_proof:'s-social',cta:'s-cta'};
+var SLBLS = {hook:'HOOK',problem:'PROBLEM',product_demo:'PRODUCT DEMO',social_proof:'SOCIAL PROOF',cta:'CTA'};
+var STAGES = [
+  {s:'UPLOADING',d:'Sending video to Gemini 2.5 Flash Lite...',n:[1]},
+  {s:'GEMINI WATCHING',d:'AI is analyzing your video frame by frame...',n:[1,2]},
+  {s:'EXTRACTING',d:'Identifying hook, pacing, visual elements...',n:[1,2,3]},
+  {s:'CLAUDE SCORING',d:'Applying creative intelligence rubric...',n:[1,2,3,4]}
 ];
 
-// ── KEY STATUS ─────────────────────────────────────────
-function updateKeyStatus(inputId, statusId, prefix) {
-  const val = document.getElementById(inputId).value.trim();
-  const el = document.getElementById(statusId);
-  if (val.startsWith(prefix) && val.length > 10) {
-    el.textContent = 'SET';
-    el.className = 'key-status key-set';
+function updateKey(iid, sid, pre) {
+  var v = document.getElementById(iid).value.trim();
+  var el = document.getElementById(sid);
+  if (v.length > 10 && v.substring(0, pre.length) === pre) {
+    el.textContent = 'SET'; el.className = 'kstatus kset';
   } else {
-    el.textContent = 'NOT SET';
-    el.className = 'key-status key-unset';
+    el.textContent = 'NOT SET'; el.className = 'kstatus kunset';
   }
 }
 
-// ── MODE SWITCHING ─────────────────────────────────────
-function switchMode(mode) {
-  currentMode = mode;
-  ['video','url'].forEach(m => {
-    document.getElementById('mode-' + m).style.display = m === mode ? 'block' : 'none';
-    document.getElementById('tab-' + m).classList.toggle('active', m === mode);
-  });
-  // When switching away from video, disable the file input so it doesn't intercept clicks
-  const fi = document.getElementById('file-input');
-  if (fi) fi.style.pointerEvents = mode === 'video' ? 'auto' : 'none';
+function switchMode(m) {
+  mode = m;
+  document.getElementById('mode-video').style.display = m === 'video' ? 'block' : 'none';
+  document.getElementById('mode-url').style.display = m === 'url' ? 'block' : 'none';
+  document.getElementById('tab-video').className = 'tab' + (m === 'video' ? ' on' : '');
+  document.getElementById('tab-url').className = 'tab' + (m === 'url' ? ' on' : '');
 }
 
-// ── FILE HANDLING ──────────────────────────────────────
-document.getElementById('file-input').addEventListener('change', function(e) {
-  if (e.target.files[0]) setFile(e.target.files[0]);
+function triggerFile() { document.getElementById('fileinput').click(); }
+
+document.getElementById('fileinput').addEventListener('change', function(e) {
+  if (e.target.files && e.target.files[0]) setFile(e.target.files[0]);
 });
 
-const dropZone = document.getElementById('drop-zone');
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault(); dropZone.classList.remove('drag-over');
-  if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+var dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', function(e) { e.preventDefault(); dz.classList.add('over'); });
+dz.addEventListener('dragleave', function() { dz.classList.remove('over'); });
+dz.addEventListener('drop', function(e) {
+  e.preventDefault(); dz.classList.remove('over');
+  if (e.dataTransfer.files && e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
 });
 
-function setFile(file) {
-  selectedFile = file;
-  document.getElementById('file-name-display').textContent = file.name;
-  document.getElementById('file-size-display').textContent = (file.size / (1024*1024)).toFixed(1) + ' MB';
-  document.getElementById('file-preview').style.display = 'flex';
-
+function setFile(f) {
+  selFile = f;
+  document.getElementById('fname').textContent = f.name;
+  document.getElementById('fsize').textContent = (f.size / 1048576).toFixed(1) + ' MB';
+  document.getElementById('fprev').style.display = 'flex';
 }
 
 function removeFile() {
-  selectedFile = null;
-  document.getElementById('file-preview').style.display = 'none';
-  document.getElementById('file-input').value = '';
-
+  selFile = null;
+  document.getElementById('fprev').style.display = 'none';
+  document.getElementById('fileinput').value = '';
 }
 
-async function pasteUrl() {
-  try {
-    const text = await navigator.clipboard.readText();
-    document.getElementById('url-input').value = text;
-  } catch { document.getElementById('url-input').focus(); }
+function doPaste() {
+  navigator.clipboard.readText().then(function(t) {
+    document.getElementById('urlin').value = t;
+  }).catch(function() { document.getElementById('urlin').focus(); });
 }
 
-// ── LOADING UI ─────────────────────────────────────────
-let loadingInterval;
-function startLoading(hasVideo) {
-  const stages = hasVideo ? LOADING_STAGES : [
-    {stage:'ANALYZING',detail:'Processing your input...',dots:[1]},
-    {stage:'CLAUDE SCORING',detail:'Applying creative intelligence rubric...',dots:[1,2]},
-    {stage:'GENERATING',detail:'Writing hook alternatives and rewrites...',dots:[1,2,3]},
-    {stage:'FINALIZING',detail:'Compiling your report...',dots:[1,2,3,4]},
-  ];
-  let i = 0;
-  updateLoadingStage(stages[0]);
-  loadingInterval = setInterval(() => {
-    i = (i + 1) % stages.length;
-    updateLoadingStage(stages[i]);
-  }, 2500);
-}
+function showErr(msg) { var e = document.getElementById('errmsg'); e.textContent = msg; e.classList.add('on'); }
+function hideErr() { document.getElementById('errmsg').classList.remove('on'); }
 
-function updateLoadingStage(s) {
-  document.getElementById('loading-stage').textContent = s.stage;
-  document.getElementById('loading-detail').textContent = s.detail;
-  for (let n = 1; n <= 4; n++) {
-    const dot = document.getElementById('pd' + n);
-    dot.classList.remove('active','done');
-    if (s.dots.includes(n)) dot.classList.add('active');
-    else if (n < Math.min(...s.dots)) dot.classList.add('done');
+function setStage(s) {
+  document.getElementById('lstage').textContent = s.s;
+  document.getElementById('ldetail').textContent = s.d;
+  for (var i = 1; i <= 4; i++) {
+    var d = document.getElementById('ld' + i);
+    d.className = 'ld' + (s.n.indexOf(i) > -1 ? ' on' : '');
   }
 }
 
-function stopLoading() { clearInterval(loadingInterval); }
+function startLoad() {
+  var i = 0; setStage(STAGES[0]);
+  lvl = setInterval(function() { i = (i + 1) % STAGES.length; setStage(STAGES[i]); }, 2500);
+}
 
-// ── MAIN ANALYSIS ──────────────────────────────────────
-async function runAnalysis() {
-  hideError();
+function stopLoad() { if (lvl) { clearInterval(lvl); lvl = null; } }
 
-  const geminiKey = document.getElementById('gemini-key').value.trim();
-  const claudeKey = document.getElementById('claude-key').value.trim();
-  const brand = document.getElementById('brand-input').value.trim() || 'Unknown brand';
-  const platform = document.getElementById('platform-select').value;
-  const objective = document.getElementById('objective-select').value;
-  const url = document.getElementById('url-input').value.trim();
-  const hasVideo = currentMode === 'video' && selectedFile;
-  const hasUrl = currentMode === 'url' && url;
+function runAnalysis() {
+  hideErr();
+  var gk = document.getElementById('gkey').value.trim();
+  var ck = document.getElementById('ckey').value.trim();
+  var brand = document.getElementById('brand').value.trim() || 'Unknown brand';
+  var platform = document.getElementById('platform').value;
+  var objective = document.getElementById('objective').value;
+  var niche = document.getElementById('niche').value.trim();
+  var url = document.getElementById('urlin').value.trim();
+  var hasVid = mode === 'video' && selFile;
+  var hasUrl = mode === 'url' && url;
 
-  if (!claudeKey || !claudeKey.startsWith('sk-ant')) {
-    showError('Please enter your Anthropic API key to continue.'); return;
-  }
-  if (!hasVideo && !hasUrl) {
-    showError('Please provide a video file or URL to analyze.'); return;
-  }
-  if (!geminiKey || !geminiKey.startsWith('AIza')) {
-    showError('A Gemini API key is required to analyze videos. Add one above.'); return;
-  }
+  if (!ck || ck.substring(0, 6) !== 'sk-ant') { showErr('Please enter your Anthropic API key.'); return; }
+  if (!hasVid && !hasUrl) { showErr('Please upload a video file or paste a URL.'); return; }
+  if (!gk || gk.substring(0, 4) !== 'AIza') { showErr('A Gemini API key is required. Add one above.'); return; }
 
   document.getElementById('upload-section').style.display = 'none';
-  document.getElementById('loading-state').classList.add('active');
-  startLoading(hasVideo || hasUrl);
+  document.getElementById('loading').classList.add('on');
+  startLoad();
 
-  try {
-    let geminiInsights = null;
+  var ctx = { brand: brand, platform: platform, objective: objective, niche: niche };
 
-    // ── STEP 1: GEMINI VIDEO ANALYSIS ──
-    if (hasVideo) {
-      geminiInsights = await analyzeWithGemini(geminiKey, selectedFile, null, brand, platform);
-    } else if (hasUrl) {
-      geminiInsights = await analyzeWithGemini(geminiKey, null, url, brand, platform);
-    }
-
-    // ── STEP 2: CLAUDE CREATIVE INTELLIGENCE ──
-    const claudeResult = await analyzeWithClaude(claudeKey, {
-      brand, platform, objective,
-      script: geminiInsights ? (geminiInsights.transcript || '') : '',
-      geminiInsights,
-      hasVideoAnalysis: true
+  geminiAnalyze(gk, hasVid ? selFile : null, hasVid ? null : url, brand, platform)
+    .then(function(gi) {
+      ctx.gemini = gi;
+      ctx.script = gi ? (gi.transcript || '') : '';
+      return claudeAnalyze(ck, ctx);
+    })
+    .then(function(cr) {
+      stopLoad();
+      cr._meta = ctx;
+      result = cr;
+      renderResults(cr, ctx.gemini, brand, platform, objective);
+    })
+    .catch(function(err) {
+      stopLoad();
+      document.getElementById('loading').classList.remove('on');
+      document.getElementById('upload-section').style.display = 'block';
+      showErr('Analysis failed: ' + err.message);
     });
-
-    stopLoading();
-    analysisData = claudeResult;
-    analysisData._meta = { brand, platform, objective, script: geminiInsights ? (geminiInsights.transcript || '') : '' };
-    geminiRawAnalysis = geminiInsights;
-
-    renderResults(claudeResult, geminiInsights, brand, platform, objective);
-
-  } catch (err) {
-    stopLoading();
-    document.getElementById('loading-state').classList.remove('active');
-    document.getElementById('upload-section').style.display = 'block';
-    showError('Analysis failed: ' + err.message);
-  }
 }
 
-// ── GEMINI VIDEO ANALYSIS ──────────────────────────────
-async function analyzeWithGemini(apiKey, file, url, brand, platform) {
-  const prompt = `You are analyzing a UGC (User Generated Content) advertisement video for the brand "${brand}" intended for ${platform}.
-
-Watch this video carefully and provide a detailed analysis. Return ONLY valid JSON, no markdown:
-
-{
-  "transcript": "<full word-for-word transcript of all spoken and on-screen text>",
-  "visual_hook": "<describe exactly what happens in the first 1-3 seconds visually>",
-  "scene_pacing": "<fast/medium/slow — describe cut frequency and energy>",
-  "creator_energy": "<high/medium/low — describe presenter confidence and authenticity>",
-  "product_visibility": "<when and how clearly the product appears>",
-  "text_overlays": "<list any on-screen text, captions, or graphics used>",
-  "platform_fit": "<how native/authentic this feels for ${platform} specifically>",
-  "hook_duration_s": <estimated seconds of the hook>,
-  "total_duration_s": <estimated total video duration in seconds>,
-  "scene_count": <approximate number of scene cuts>,
-  "has_voiceover": <true/false>,
-  "has_captions": <true/false>,
-  "key_moments": ["<timestamp and description>", "<timestamp and description>"]
-}`;
+function geminiAnalyze(ak, file, url, brand, platform) {
+  var prompt = 'Analyze this UGC ad for "' + brand + '" on ' + platform + '. Return ONLY valid JSON:\n{"transcript":"<full transcript>","visual_hook":"<first 1-3s visual>","scene_pacing":"<fast/medium/slow description>","creator_energy":"<high/medium/low description>","product_visibility":"<when product appears>","text_overlays":"<on-screen text>","platform_fit":"<native feel for ' + platform + '>","hook_duration_s":<number>,"total_duration_s":<number>,"scene_count":<number>,"has_voiceover":<true/false>,"has_captions":<true/false>}';
 
   if (file) {
-    // Upload file to Gemini Files API first
-    const uploadRes = await fetch(
-      `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Goog-Upload-Command': 'start, upload, finalize',
-          'X-Goog-Upload-Header-Content-Length': file.size,
-          'X-Goog-Upload-Header-Content-Type': file.type,
-          'Content-Type': file.type
-        },
-        body: file
-      }
-    );
-
-    if (!uploadRes.ok) {
-      const err = await uploadRes.json();
-      throw new Error('Gemini upload failed: ' + (err.error?.message || uploadRes.status));
-    }
-
-    const uploadData = await uploadRes.json();
-    const fileUri = uploadData.file?.uri;
-    if (!fileUri) throw new Error('Gemini file upload did not return a URI');
-
-    // Wait briefly for file processing
-    await new Promise(r => setTimeout(r, 2000));
-
-    // Now analyze
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { file_data: { mime_type: file.type, file_uri: fileUri } },
-              { text: prompt }
-            ]
-          }],
-          generationConfig: { temperature: 0, maxOutputTokens: 1500 }
-        })
-      }
-    );
-
-    const data = await res.json();
-    if (data.error) throw new Error('Gemini analysis error: ' + data.error.message);
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    return parseJSON(text);
-
-  } else if (url) {
-    // For URL — ask Gemini to analyze based on URL context
-    // Note: Gemini can't fetch arbitrary URLs directly, so we describe the URL
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: `The user provided this video URL: ${url}\n\nBased on the URL and any context you can infer about this video content, provide your best analysis. If this is a TikTok, Instagram, or YouTube URL, describe what a typical high-performing UGC ad from that platform looks like.\n\n${prompt}` }]
-          }],
-          generationConfig: { temperature: 0, maxOutputTokens: 1000 }
-        })
-      }
-    );
-    const data = await res.json();
-    if (data.error) throw new Error('Gemini error: ' + data.error.message);
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-    return parseJSON(text);
-  }
-}
-
-// ── CLAUDE CREATIVE INTELLIGENCE ──────────────────────
-async function analyzeWithClaude(apiKey, context) {
-  const geminiContext = context.geminiInsights ? `
-GEMINI VIDEO ANALYSIS (what the AI saw when watching the video):
-- Transcript: ${context.geminiInsights.transcript || 'Not available'}
-- Visual Hook (first 3s): ${context.geminiInsights.visual_hook || 'Not available'}
-- Scene Pacing: ${context.geminiInsights.scene_pacing || 'Not available'}
-- Creator Energy: ${context.geminiInsights.creator_energy || 'Not available'}
-- Product Visibility: ${context.geminiInsights.product_visibility || 'Not available'}
-- Text Overlays: ${context.geminiInsights.text_overlays || 'None detected'}
-- Platform Fit: ${context.geminiInsights.platform_fit || 'Not available'}
-- Hook Duration: ${context.geminiInsights.hook_duration_s || 'Unknown'}s
-- Total Duration: ${context.geminiInsights.total_duration_s || 'Unknown'}s
-- Scene Count: ${context.geminiInsights.scene_count || 'Unknown'}
-` : '';
-
-  const prompt = `You are an elite UGC ad creative analyst with deep expertise in performance marketing for DTC brands. You have analyzed thousands of creator ads across TikTok, Instagram, and YouTube.
-
-CAMPAIGN CONTEXT:
-Brand/Product: ${context.brand}
-Platform: ${context.platform}
-Objective: ${context.objective}
-Duration: ${context.duration}
-${context.script ? `Script/Transcript: ${context.script}` : ''}
-${geminiContext}
-
-Based on all available information, return ONLY a valid JSON object (no markdown, no explanation):
-
-{
-  "creative_score": <0-100, overall creative effectiveness>,
-  "hook_retention_pct": <0-100, predicted % of viewers who watch past the hook>,
-  "avg_watch_time_s": <predicted average watch time in seconds>,
-  "video_duration_s": <total duration in seconds>,
-  "cta_tap_rate_pct": <0-10, predicted CTA click rate>,
-  "authenticity_score": <0-100>,
-  "hook_score": <0-100>,
-  "hook_score_label": <"STRONG"|"MODERATE"|"WEAK">,
-  "segments": [
-    {"type":"hook","duration_s":<number>},
-    {"type":"problem","duration_s":<number>},
-    {"type":"product_demo","duration_s":<number>},
-    {"type":"social_proof","duration_s":<number>},
-    {"type":"cta","duration_s":<number>}
-  ],
-  "hook_analysis": "<2-3 specific sentences about hook effectiveness, what works, what doesn't>",
-  "authenticity_analysis": "<2 sentences on platform-native feel and creator authenticity>",
-  "pacing_analysis": "<2-3 sentences on pacing, scene density, attention maintenance>",
-  "cta_analysis": "<2 sentences on CTA placement, clarity, and conversion likelihood>",
-  "annotations": [
-    {"label":"Hook drop-off: <X>%"},
-    {"label":"Peak retention: <X>%"},
-    {"label":"CTA engagement: <X>%"}
-  ],
-  "recommendations": [
-    {"title":"<concise title>","description":"<specific, actionable 1-2 sentence recommendation>"},
-    {"title":"<concise title>","description":"<specific, actionable 1-2 sentence recommendation>"},
-    {"title":"<concise title>","description":"<specific, actionable 1-2 sentence recommendation>"},
-    {"title":"<concise title>","description":"<specific, actionable 1-2 sentence recommendation>"}
-  ],
-  "alternative_hooks": [
-    {"type":"CURIOSITY GAP","text":"<complete hook rewrite>"},
-    {"type":"BOLD CLAIM","text":"<complete hook rewrite>"},
-    {"type":"PAIN POINT","text":"<complete hook rewrite>"},
-    {"type":"SOCIAL PROOF OPEN","text":"<complete hook rewrite>"}
-  ],
-  "rewrite_variants": [
-    {"variant":"VARIANT A — EMOTIONAL","script":"<3-5 sentence complete rewrite focused on emotion and identity>"},
-    {"variant":"VARIANT B — DIRECT RESPONSE","script":"<3-5 sentence complete rewrite optimized for immediate conversion>"},
-    {"variant":"VARIANT C — STORYTELLING","script":"<3-5 sentence complete rewrite using a narrative arc>"}
-  ]
-}`;
-
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 2500, temperature: 0,
-      messages: [{ role: 'user', content: prompt }]
+    return fetch('https://generativelanguage.googleapis.com/upload/v1beta/files?key=' + ak, {
+      method: 'POST',
+      headers: {
+        'X-Goog-Upload-Command': 'start, upload, finalize',
+        'X-Goog-Upload-Header-Content-Length': file.size,
+        'X-Goog-Upload-Header-Content-Type': file.type,
+        'Content-Type': file.type
+      },
+      body: file
     })
-  });
-
-  const data = await res.json();
-  if (data.error) throw new Error('Claude error: ' + data.error.message);
-  const text = data.content[0].text;
-  return parseJSON(text);
-}
-
-// ── PARSE JSON SAFELY ──────────────────────────────────
-function parseJSON(text) {
-  const match = text.match(/\{[\s\S]*\}/);
-  if (!match) throw new Error('Could not parse AI response as JSON');
-  try { return JSON.parse(match[0]); }
-  catch(e) { throw new Error('Invalid JSON from AI: ' + e.message); }
-}
-
-// ── RENDER RESULTS ─────────────────────────────────────
-function renderResults(d, gemini, brand, platform, objective) {
-  document.getElementById('loading-state').classList.remove('active');
-  document.getElementById('results').classList.add('active');
-
-  const score = d.creative_score || 0;
-  const scoreEl = document.getElementById('r-score');
-  scoreEl.textContent = score;
-  scoreEl.className = 'score-num ' + (score >= 75 ? 'score-green' : score >= 50 ? 'score-yellow' : 'score-red');
-
-  document.getElementById('r-brand').textContent = brand;
-  document.getElementById('r-sub').textContent = platform.toUpperCase() + ' · ' + objective.toUpperCase().replace('_',' ');
-
-  // Gemini insights panel
-  if (gemini) {
-    document.getElementById('gemini-section').style.display = 'block';
-    document.getElementById('g-visual-hook').innerHTML = gemini.visual_hook || '—';
-    document.getElementById('g-scene-pacing').innerHTML = gemini.scene_pacing || '—';
-    document.getElementById('g-creator-energy').innerHTML = gemini.creator_energy || '—';
-    document.getElementById('g-product-vis').innerHTML = gemini.product_visibility || '—';
-    document.getElementById('g-text-overlays').innerHTML = gemini.text_overlays || 'None detected';
-    document.getElementById('g-platform-fit').innerHTML = gemini.platform_fit || '—';
+    .then(function(r) {
+      if (!r.ok) return r.json().then(function(e) { throw new Error('Upload failed: ' + (e.error ? e.error.message : r.status)); });
+      return r.json();
+    })
+    .then(function(ud) {
+      if (!ud.file || !ud.file.uri) throw new Error('Upload did not return file URI');
+      var uri = ud.file.uri;
+      var mt = file.type;
+      return new Promise(function(res) { setTimeout(res, 8000); })
+        .then(function() {
+          return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + ak, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              contents: [{parts: [{file_data: {mime_type: mt, file_uri: uri}}, {text: prompt}]}],
+              generationConfig: {temperature: 0, maxOutputTokens: 1500}
+            })
+          });
+        });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error('Gemini analysis error: ' + d.error.message);
+      var t = d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0] ? d.candidates[0].content.parts[0].text : '{}';
+      return safeJSON(t);
+    });
   }
 
-  // Timeline
-  const dur = d.video_duration_s || 15;
-  const steps = [0, Math.round(dur*0.25), Math.round(dur*0.5), Math.round(dur*0.75), dur];
-  document.getElementById('r-ruler').innerHTML = [...new Set(steps)].map(s=>`<span>${s}s</span>`).join('');
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + ak, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      contents: [{parts: [{text: 'URL: ' + url + '\n\n' + prompt}]}],
+      generationConfig: {temperature: 0, maxOutputTokens: 1000}
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) throw new Error('Gemini error: ' + d.error.message);
+    var t = d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0] ? d.candidates[0].content.parts[0].text : '{}';
+    return safeJSON(t);
+  });
+}
 
-  const bar = document.getElementById('r-timeline');
-  bar.innerHTML = '';
-  (d.segments||[]).forEach(seg => {
-    const pct = (seg.duration_s / dur) * 100;
-    const div = document.createElement('div');
-    div.className = 'seg ' + (SEG_COLORS[seg.type] || 'seg-hook');
+function claudeAnalyze(ak, ctx) {
+  var gc = '';
+  if (ctx.gemini) {
+    var g = ctx.gemini;
+    gc = '\nGEMINI VIDEO ANALYSIS:\nTranscript: ' + (g.transcript||'N/A') + '\nVisual Hook: ' + (g.visual_hook||'N/A') + '\nPacing: ' + (g.scene_pacing||'N/A') + '\nCreator Energy: ' + (g.creator_energy||'N/A') + '\nProduct Visibility: ' + (g.product_visibility||'N/A') + '\nText Overlays: ' + (g.text_overlays||'None') + '\nPlatform Fit: ' + (g.platform_fit||'N/A') + '\nHook Duration: ' + (g.hook_duration_s||'?') + 's\nTotal Duration: ' + (g.total_duration_s||'?') + 's\nScene Count: ' + (g.scene_count||'?');
+  }
+
+  var p = 'You are an elite UGC ad creative analyst.\n\nBrand: ' + ctx.brand + '\nPlatform: ' + ctx.platform + '\nObjective: ' + ctx.objective + '\nNiche: ' + (ctx.niche||'Unknown') + gc + '\n\nReturn ONLY valid JSON (no markdown):\n{"creative_score":<0-100>,"hook_retention_pct":<0-100>,"avg_watch_time_s":<n>,"video_duration_s":<n>,"cta_tap_rate_pct":<0-10>,"authenticity_score":<0-100>,"hook_score":<0-100>,"hook_score_label":"STRONG or MODERATE or WEAK","segments":[{"type":"hook","duration_s":<n>},{"type":"problem","duration_s":<n>},{"type":"product_demo","duration_s":<n>},{"type":"social_proof","duration_s":<n>},{"type":"cta","duration_s":<n>}],"hook_analysis":"<2-3 sentences>","authenticity_analysis":"<2 sentences>","pacing_analysis":"<2-3 sentences>","cta_analysis":"<2 sentences>","annotations":[{"label":"Hook drop-off: X%"},{"label":"Peak retention: X%"},{"label":"CTA engagement: X%"}],"recommendations":[{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"}],"alternative_hooks":[{"type":"CURIOSITY GAP","text":"<h>"},{"type":"BOLD CLAIM","text":"<h>"},{"type":"PAIN POINT","text":"<h>"},{"type":"SOCIAL PROOF OPEN","text":"<h>"}],"rewrite_variants":[{"variant":"VARIANT A — EMOTIONAL","script":"<s>"},{"variant":"VARIANT B — DIRECT RESPONSE","script":"<s>"},{"variant":"VARIANT C — STORYTELLING","script":"<s>"}]}';
+
+  return fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','x-api-key':ak,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body: JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2500,temperature:0,messages:[{role:'user',content:p}]})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) throw new Error('Claude error: ' + d.error.message);
+    return safeJSON(d.content[0].text);
+  });
+}
+
+function safeJSON(text) {
+  var m = text.match(/\{[\s\S]*\}/);
+  if (!m) throw new Error('Could not parse AI response');
+  return JSON.parse(m[0]);
+}
+
+function renderResults(d, g, brand, platform, objective) {
+  document.getElementById('loading').classList.remove('on');
+  document.getElementById('results').classList.add('on');
+
+  var sc = d.creative_score || 0;
+  var sel = document.getElementById('rscore');
+  sel.textContent = sc;
+  sel.className = 'snum ' + (sc >= 75 ? 'sg' : sc >= 50 ? 'sy' : 'sr');
+  document.getElementById('rbrand').textContent = brand;
+  document.getElementById('rsub').textContent = platform.toUpperCase() + ' · ' + objective.toUpperCase().replace('_',' ');
+
+  if (g) {
+    document.getElementById('gpanel').style.display = 'block';
+    document.getElementById('g1').textContent = g.visual_hook || '—';
+    document.getElementById('g2').textContent = g.scene_pacing || '—';
+    document.getElementById('g3').textContent = g.creator_energy || '—';
+    document.getElementById('g4').textContent = g.product_visibility || '—';
+    document.getElementById('g5').textContent = g.text_overlays || 'None detected';
+    document.getElementById('g6').textContent = g.platform_fit || '—';
+  }
+
+  var dur = d.video_duration_s || 30;
+  var steps = [0, Math.round(dur*0.25), Math.round(dur*0.5), Math.round(dur*0.75), dur];
+  var us = steps.filter(function(v,i,a){return a.indexOf(v)===i;});
+  document.getElementById('ruler').innerHTML = us.map(function(s){return '<span>'+s+'s</span>';}).join('');
+
+  var tb = document.getElementById('tbar');
+  tb.innerHTML = '';
+  (d.segments||[]).forEach(function(seg) {
+    var pct = (seg.duration_s / dur) * 100;
+    var div = document.createElement('div');
+    div.className = 'seg ' + (SCOLS[seg.type] || 's-hook');
     div.style.flexBasis = pct + '%';
-    div.innerHTML = `<span class="seg-lbl">${SEG_LABELS[seg.type]||seg.type.toUpperCase()}</span><span class="seg-t">${seg.duration_s}s</span>`;
-    bar.appendChild(div);
+    div.innerHTML = '<span class="slbl">' + (SLBLS[seg.type]||seg.type.toUpperCase()) + '</span><span class="st">' + seg.duration_s + 's</span>';
+    tb.appendChild(div);
   });
 
-  document.getElementById('r-notes').innerHTML = (d.annotations||[]).map(a=>
-    `<span style="font-family:'Space Mono',monospace;font-size:10px;color:#444">${a.label}</span>`
-  ).join('');
+  document.getElementById('tnotes').innerHTML = (d.annotations||[]).map(function(a){
+    return '<span style="font-family:\'Space Mono\',monospace;font-size:10px;color:#444">'+a.label+'</span>';
+  }).join('');
 
-  // Metrics
-  setMetric('m-hook', 'm-hook-bar', d.hook_retention_pct + '%', d.hook_retention_pct);
-  setMetric('m-watch', 'm-watch-bar', d.avg_watch_time_s + 's / ' + dur + 's', (d.avg_watch_time_s/dur)*100);
-  setMetric('m-cta', 'm-cta-bar', d.cta_tap_rate_pct + '%', d.cta_tap_rate_pct * 10);
-  setMetric('m-auth', 'm-auth-bar', d.authenticity_score + '/100', d.authenticity_score);
+  sm('mv1','mf1', d.hook_retention_pct+'%', d.hook_retention_pct);
+  sm('mv2','mf2', d.avg_watch_time_s+'s / '+dur+'s', Math.min((d.avg_watch_time_s/dur)*100,100));
+  sm('mv3','mf3', d.cta_tap_rate_pct+'%', d.cta_tap_rate_pct*10);
+  sm('mv4','mf4', d.authenticity_score+'/100', d.authenticity_score);
 
-  // Analysis cards
-  const pillClass = d.hook_score >= 75 ? 'pill-high' : d.hook_score >= 50 ? 'pill-mid' : 'pill-low';
-  document.getElementById('r-hook-pill').innerHTML = `<div class="score-pill ${pillClass}">${d.hook_score_label} · ${d.hook_score}/100</div>`;
-  setHTML('r-hook-analysis', d.hook_analysis);
-  document.getElementById('r-auth-score').textContent = d.authenticity_score + '/100';
-  document.getElementById('r-auth-bar').style.width = d.authenticity_score + '%';
-  setHTML('r-auth-analysis', d.authenticity_analysis);
-  setHTML('r-pacing', d.pacing_analysis);
-  setHTML('r-cta', d.cta_analysis);
+  var pc = d.hook_score >= 75 ? 'ph' : d.hook_score >= 50 ? 'pm' : 'pl';
+  document.getElementById('hookpill').innerHTML = '<div class="pill '+pc+'">'+d.hook_score_label+' · '+d.hook_score+'/100</div>';
+  sh('hooktext', d.hook_analysis);
+  document.getElementById('authscore').textContent = d.authenticity_score+'/100';
+  setTimeout(function(){document.getElementById('authfill').style.width=d.authenticity_score+'%';},100);
+  sh('authtext', d.authenticity_analysis);
+  sh('pacingtext', d.pacing_analysis);
+  sh('ctatext', d.cta_analysis);
 
-  // Recs
-  document.getElementById('r-recs').innerHTML = (d.recommendations||[]).map((r,i)=>`
-    <div class="rec-item">
-      <span class="rec-num">0${i+1}</span>
-      <div><div class="rec-title">${r.title}</div><div class="rec-desc">${r.description}</div></div>
-    </div>`).join('');
+  document.getElementById('recslist').innerHTML = (d.recommendations||[]).map(function(r,i){
+    return '<div class="recitem"><span class="recnum">0'+(i+1)+'</span><div><div class="rectitle">'+r.title+'</div><div class="recdesc">'+r.description+'</div></div></div>';
+  }).join('');
 
-  // Hooks
-  document.getElementById('r-hooks').innerHTML = (d.alternative_hooks||[]).map(h=>`
-    <div class="hook-item">
-      <div class="hook-type">${h.type}</div>
-      <div class="hook-text">"${h.text}"</div>
-    </div>`).join('');
+  document.getElementById('hookslist').innerHTML = (d.alternative_hooks||[]).map(function(h){
+    return '<div class="hookitem"><div class="hooktype">'+h.type+'</div><div class="hooktext">"'+h.text+'"</div></div>';
+  }).join('');
 
-  // Rewrites
-  document.getElementById('r-rewrites').innerHTML = (d.rewrite_variants||[]).map(r=>`
-    <div class="rewrite-block">
-      <div class="rewrite-variant">${r.variant}</div>
-      <div class="rewrite-text">"${r.script}"</div>
-    </div>`).join('');
+  document.getElementById('rwlist').innerHTML = (d.rewrite_variants||[]).map(function(r){
+    return '<div class="rwblock"><div class="rwvar">'+r.variant+'</div><div class="rwtext">"'+r.script+'"</div></div>';
+  }).join('');
 
-  // Footer
-  document.getElementById('f-platform').textContent = platform.toUpperCase();
-  document.getElementById('f-objective').textContent = objective.toUpperCase().replace('_',' ');
+  document.getElementById('fp').textContent = platform.toUpperCase();
+  document.getElementById('fo').textContent = objective.toUpperCase().replace('_',' ');
 
-  // Airtable save button
-  const atKey = document.getElementById('at-key').value.trim();
-  const atBase = document.getElementById('at-base').value.trim();
-  if (atKey && atBase) document.getElementById('save-card').style.display = 'flex';
+  var ak = document.getElementById('atkey').value.trim();
+  var ab = document.getElementById('atbase').value.trim();
+  if (ak && ab) document.getElementById('savecard').style.display = 'flex';
 }
 
-function setMetric(valId, barId, text, pct) {
-  document.getElementById(valId).textContent = text;
-  setTimeout(() => { document.getElementById(barId).style.width = Math.min(pct, 100) + '%'; }, 100);
+function sm(vid, bid, txt, pct) {
+  document.getElementById(vid).textContent = txt;
+  setTimeout(function(){document.getElementById(bid).style.width=Math.min(pct,100)+'%';},100);
 }
 
-function setHTML(id, text) {
+function sh(id, text) {
   document.getElementById(id).innerHTML = (text||'—').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
 }
 
-// ── SAVE TO AIRTABLE ───────────────────────────────────
-async function saveToAirtable() {
-  if (!analysisData) return;
-  const atKey = document.getElementById('at-key').value.trim();
-  const atBase = document.getElementById('at-base').value.trim();
-  const btn = document.getElementById('save-btn');
-  const status = document.getElementById('save-status');
-
-  btn.disabled = true;
-  btn.textContent = 'SAVING...';
-
-  try {
-    const fields = {
-      'Brand': analysisData._meta?.brand || '',
-      'Platform': analysisData._meta?.platform || '',
-      'Script': analysisData._meta?.script || '',
-      'Creative Score': analysisData.creative_score,
-      'Hook Score': analysisData.hook_score,
-      'Analysis Output': JSON.stringify(analysisData, null, 2),
-      'Date': new Date().toISOString().split('T')[0]
-    };
-
-    const res = await fetch(`https://api.airtable.com/v0/${atBase}/Ads%20Analyzed`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${atKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ fields })
-    });
-
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message);
-    btn.textContent = 'SAVED ✓';
-    btn.style.borderColor = '#00c47a';
-    status.textContent = 'Saved to Airtable';
-    status.style.color = '#00c47a';
-  } catch(err) {
-    btn.disabled = false;
-    btn.textContent = 'RETRY';
-    status.textContent = 'Failed: ' + err.message;
-    status.style.color = '#ff4d00';
-  }
-}
-
-// ── SHARE RESULTS ─────────────────────────────────────
-function shareResults() {
-  if (!analysisData) return;
-  const d = analysisData;
-  const m = d._meta || {};
-  const summary = `UGC CREATIVE INTELLIGENCE REPORT
-Generated by victorxuorigins.github.io/ugc-creative-analyzer
-
-Brand: ${m.brand || '—'}
-Platform: ${(m.platform || '—').toUpperCase()}
-Objective: ${(m.objective || '—').toUpperCase().replace('_',' ')}
-
-SCORES
-Creative Score: ${d.creative_score}/100
-Hook Score: ${d.hook_score_label} · ${d.hook_score}/100
-Hook Retention: ${d.hook_retention_pct}%
-Avg Watch Time: ${d.avg_watch_time_s}s / ${d.video_duration_s}s
-CTA Tap Rate: ${d.cta_tap_rate_pct}%
-Authenticity: ${d.authenticity_score}/100
-
-HOOK ANALYSIS
-${d.hook_analysis}
-
-PACING
-${d.pacing_analysis}
-
-CTA
-${d.cta_analysis}
-
-RECOMMENDATIONS
-${(d.recommendations||[]).map((r,i) => `${i+1}. ${r.title}: ${r.description}`).join('
-')}
-
-ALTERNATIVE HOOKS
-${(d.alternative_hooks||[]).map(h => `[${h.type}] "${h.text}"`).join('
-')}
-
-REWRITE VARIANTS
-${(d.rewrite_variants||[]).map(r => `${r.variant}
-"${r.script}"`).join('
-
-')}
-
----
-Analyzed by UGC Creative Intelligence · Built by Victor Xu`;
-
-  navigator.clipboard.writeText(summary).then(() => {
-    const btn = document.getElementById('share-btn');
-    btn.textContent = '✓ COPIED TO CLIPBOARD';
-    btn.style.borderColor = '#00c47a40';
-    btn.style.color = '#00c47a';
-    setTimeout(() => {
-      btn.textContent = '↗ COPY SHAREABLE SUMMARY';
-      btn.style.borderColor = '#ff4d0040';
-      btn.style.color = '#ff4d00';
-    }, 2500);
-  }).catch(() => {
-    alert('Copy failed — please manually select and copy the report.');
+function doSave() {
+  if (!result) return;
+  var ak = document.getElementById('atkey').value.trim();
+  var ab = document.getElementById('atbase').value.trim();
+  var btn = document.getElementById('savebtn');
+  var st = document.getElementById('savestatus');
+  btn.disabled = true; btn.textContent = 'SAVING...';
+  var m = result._meta || {};
+  fetch('https://api.airtable.com/v0/' + ab + '/Ads%20Analyzed', {
+    method: 'POST',
+    headers: {'Authorization':'Bearer '+ak,'Content-Type':'application/json'},
+    body: JSON.stringify({fields:{'Brand':m.brand||'','Platform':m.platform||'','Script':m.script||'','Creative Score':result.creative_score,'Hook Score':result.hook_score,'Analysis Output':JSON.stringify(result,null,2),'Date':new Date().toISOString().split('T')[0]}})
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    if (d.error) throw new Error(d.error.message);
+    btn.textContent = 'SAVED'; btn.style.borderColor='#00c47a';
+    st.textContent = 'Saved to Airtable'; st.style.color='#00c47a';
+  })
+  .catch(function(err){
+    btn.disabled=false; btn.textContent='RETRY';
+    st.textContent='Failed: '+err.message; st.style.color='#ff4d00';
   });
 }
 
-// ── UTILS ──────────────────────────────────────────────
-function showError(msg) {
-  const el = document.getElementById('error-msg');
-  el.textContent = msg; el.classList.add('active');
+function doShare() {
+  if (!result) return;
+  var d = result; var m = d._meta || {};
+  var lines = ['UGC CREATIVE INTELLIGENCE REPORT','victorxuorigins.github.io/ugc-creative-analyzer','','Brand: '+(m.brand||'—'),'Platform: '+(m.platform||'—').toUpperCase(),'','SCORES','Creative Score: '+d.creative_score+'/100','Hook: '+d.hook_score_label+' · '+d.hook_score+'/100','Hook Retention: '+d.hook_retention_pct+'%','Avg Watch: '+d.avg_watch_time_s+'s / '+d.video_duration_s+'s','CTA Rate: '+d.cta_tap_rate_pct+'%','Authenticity: '+d.authenticity_score+'/100','','HOOK ANALYSIS',d.hook_analysis||'—','','RECOMMENDATIONS'];
+  (d.recommendations||[]).forEach(function(r,i){lines.push((i+1)+'. '+r.title+': '+r.description);});
+  lines.push('','HOOKS');
+  (d.alternative_hooks||[]).forEach(function(h){lines.push('['+h.type+'] "'+h.text+'"');});
+  lines.push('','REWRITES');
+  (d.rewrite_variants||[]).forEach(function(r){lines.push(r.variant+'\n"'+r.script+'"');});
+  lines.push('','— Built by Victor Xu');
+  var btn = document.getElementById('sharebtn');
+  navigator.clipboard.writeText(lines.join('\n')).then(function(){
+    btn.textContent='COPIED'; btn.style.color='#00c47a'; btn.style.borderColor='#00c47a40';
+    setTimeout(function(){btn.textContent='COPY REPORT';btn.style.color='#ff4d00';btn.style.borderColor='#ff4d0040';},2500);
+  }).catch(function(){alert('Copy failed — please manually select text.');});
 }
-function hideError() { document.getElementById('error-msg').classList.remove('active'); }
 
 function resetUI() {
-  selectedFile = null; analysisData = null; geminiRawAnalysis = '';
-  removeFile();
-  document.getElementById('url-input').value = '';
-  document.getElementById('brand-input').value = '';
-  document.getElementById('results').classList.remove('active');
-  document.getElementById('upload-section').style.display = 'block';
-  document.getElementById('gemini-section').style.display = 'none';
-  hideError();
+  selFile=null; result=null; removeFile();
+  document.getElementById('urlin').value='';
+  document.getElementById('brand').value='';
+  document.getElementById('niche').value='';
+  document.getElementById('results').classList.remove('on');
+  document.getElementById('gpanel').style.display='none';
+  document.getElementById('savecard').style.display='none';
+  document.getElementById('upload-section').style.display='block';
+  hideErr(); switchMode('video');
 }
 </script>
 </body>
