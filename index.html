@@ -342,7 +342,7 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
 
   <div class="btnrow">
     <button class="rbtn" onclick="resetUI()">ANALYZE ANOTHER</button>
-    <button class="sbtn" id="sharebtn" onclick="doShare()">COPY REPORT</button>
+    <button class="sbtn" id="sharebtn" onclick="downloadReport()">DOWNLOAD REPORT</button>
   </div>
 </div>
 
@@ -651,38 +651,196 @@ function doSave() {
   var st = document.getElementById('savestatus');
   btn.disabled = true; btn.textContent = 'SAVING...';
   var m = result._meta || {};
-  fetch('https://api.airtable.com/v0/' + ab + '/Ads%20Analyzed', {
+  var tableName = 'Ads Analyzed';
+  fetch('https://api.airtable.com/v0/' + ab + '/' + encodeURIComponent(tableName), {
     method: 'POST',
     headers: {'Authorization':'Bearer '+ak,'Content-Type':'application/json'},
-    body: JSON.stringify({fields:{'Brand':m.brand||'','Platform':m.platform||'','Script':m.script||'','Creative Score':result.creative_score,'Hook Score':result.hook_score,'Analysis Output':JSON.stringify(result,null,2),'Date':new Date().toISOString().split('T')[0]}})
+    body: JSON.stringify({fields:{
+      'Brand': m.brand||'',
+      'Platform': m.platform||'',
+      'Script': (m.script||'').substring(0,10000),
+      'Creative Score': result.creative_score||0,
+      'Hook Score': result.hook_score||0,
+      'Analysis Output': JSON.stringify({
+        hook_analysis: result.hook_analysis,
+        pacing_analysis: result.pacing_analysis,
+        cta_analysis: result.cta_analysis,
+        recommendations: result.recommendations,
+        alternative_hooks: result.alternative_hooks
+      }),
+      'Date': new Date().toISOString().split('T')[0]
+    }})
   })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    if (d.error) throw new Error(d.error.message);
+  .then(function(r){
+    return r.json().then(function(d){ return {ok: r.ok, status: r.status, data: d}; });
+  })
+  .then(function(res){
+    if (!res.ok || (res.data && res.data.error)) {
+      var msg = res.data && res.data.error ? res.data.error.message : ('HTTP ' + res.status);
+      throw new Error(msg);
+    }
     btn.textContent = 'SAVED'; btn.style.borderColor='#00c47a';
     st.textContent = 'Saved to Airtable'; st.style.color='#00c47a';
   })
   .catch(function(err){
     btn.disabled=false; btn.textContent='RETRY';
-    st.textContent='Failed: '+err.message; st.style.color='#ff4d00';
+    st.textContent='Error: '+err.message; st.style.color='#ff4d00';
+    console.error('Airtable error:', err);
   });
 }
 
-function doShare() {
+function downloadReport() {
   if (!result) return;
   var d = result; var m = d._meta || {};
-  var lines = ['UGC CREATIVE INTELLIGENCE REPORT','victorxuorigins.github.io/ugc-creative-analyzer','','Brand: '+(m.brand||'—'),'Platform: '+(m.platform||'—').toUpperCase(),'','SCORES','Creative Score: '+d.creative_score+'/100','Hook: '+d.hook_score_label+' · '+d.hook_score+'/100','Hook Retention: '+d.hook_retention_pct+'%','Avg Watch: '+d.avg_watch_time_s+'s / '+d.video_duration_s+'s','CTA Rate: '+d.cta_tap_rate_pct+'%','Authenticity: '+d.authenticity_score+'/100','','HOOK ANALYSIS',d.hook_analysis||'—','','RECOMMENDATIONS'];
-  (d.recommendations||[]).forEach(function(r,i){lines.push((i+1)+'. '+r.title+': '+r.description);});
-  lines.push('','HOOKS');
-  (d.alternative_hooks||[]).forEach(function(h){lines.push('['+h.type+'] "'+h.text+'"');});
-  lines.push('','REWRITES');
-  (d.rewrite_variants||[]).forEach(function(r){lines.push(r.variant+'\n"'+r.script+'"');});
-  lines.push('','— Built by Victor Xu');
+  var brand = m.brand || 'Unknown';
+  var platform = (m.platform || 'unknown').toUpperCase();
+  var score = d.creative_score || 0;
+  var scoreColor = score >= 75 ? '#00ff88' : score >= 50 ? '#ffb800' : '#ff4d00';
+
+  var segColors = {hook:'#ff4d00',problem:'#9b6fd4',product_demo:'#00b4ff',social_proof:'#00c47a',cta:'#ffb800'};
+  var segLabels = {hook:'HOOK',problem:'PROBLEM',product_demo:'PRODUCT DEMO',social_proof:'SOCIAL PROOF',cta:'CTA'};
+  var dur = d.video_duration_s || 30;
+
+  var timelineHTML = '';
+  (d.segments||[]).forEach(function(seg) {
+    var pct = ((seg.duration_s / dur) * 100).toFixed(1);
+    var col = segColors[seg.type] || '#ff4d00';
+    var lbl = segLabels[seg.type] || seg.type.toUpperCase();
+    timelineHTML += '<div style="flex-basis:'+pct+'%;background:'+col+';display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:3px;min-width:20px;">';
+    timelineHTML += '<span style="font-family:monospace;font-size:7px;font-weight:700;color:#000;text-transform:uppercase;">'+lbl+'</span>';
+    timelineHTML += '<span style="font-family:monospace;font-size:6px;color:rgba(0,0,0,0.6);">'+seg.duration_s+'s</span></div>';
+  });
+
+  var recsHTML = (d.recommendations||[]).map(function(r,i){
+    return '<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #1e1e1e;">'
+      +'<span style="font-family:monospace;font-size:11px;color:#ff4d00;flex-shrink:0;">0'+(i+1)+'</span>'
+      +'<div><div style="font-size:13px;font-weight:500;color:#ddd;margin-bottom:3px;">'+r.title+'</div>'
+      +'<div style="font-size:12px;color:#666;line-height:1.5;">'+r.description+'</div></div></div>';
+  }).join('');
+
+  var hooksHTML = (d.alternative_hooks||[]).map(function(h){
+    return '<div style="background:#111;border:1px solid #1e1e1e;border-radius:6px;padding:12px;margin-bottom:8px;">'
+      +'<div style="font-family:monospace;font-size:9px;color:#ff4d00;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;">'+h.type+'</div>'
+      +'<div style="font-size:13px;color:#ccc;">&ldquo;'+h.text+'&rdquo;</div></div>';
+  }).join('');
+
+  var rwHTML = (d.rewrite_variants||[]).map(function(r){
+    return '<div style="border-left:2px solid #ff4d00;padding-left:14px;margin-bottom:16px;">'
+      +'<div style="font-family:monospace;font-size:9px;color:#ff4d00;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">'+r.variant+'</div>'
+      +'<div style="font-size:13px;color:#888;line-height:1.7;">&ldquo;'+r.script+'&rdquo;</div></div>';
+  }).join('');
+
+  var geminiHTML = '';
+  if (m.gemini) {
+    var g = m.gemini;
+    var gFields = [
+      ['Visual Hook', g.visual_hook],['Scene Pacing', g.scene_pacing],
+      ['Creator Energy', g.creator_energy],['Product Visibility', g.product_visibility],
+      ['Text Overlays', g.text_overlays],['Platform Fit', g.platform_fit]
+    ];
+    geminiHTML = '<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;margin-bottom:20px;">'
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">'
+      +'<span style="font-family:monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;">Visual Analysis</span>'
+      +'<span style="font-family:monospace;font-size:9px;padding:2px 7px;border-radius:3px;background:rgba(66,133,244,0.12);color:#4285f4;border:1px solid rgba(66,133,244,0.2);">GEMINI 2.5 FLASH LITE</span></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">';
+    gFields.forEach(function(f){
+      geminiHTML += '<div style="background:#111;border:1px solid #1a1a1a;border-radius:6px;padding:12px;">'
+        +'<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;">'+f[0]+'</div>'
+        +'<div style="font-size:12px;color:#aaa;line-height:1.5;">'+(f[1]||'—')+'</div></div>';
+    });
+    geminiHTML += '</div></div>';
+  }
+
+  var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<title>UGC Report — '+brand+'</title>'
+    +'<style>body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;max-width:960px;margin:0 auto;padding:32px 24px;}@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500&display=swap');</style>'
+    +'</head><body>'
+
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #1a1a1a;">'
+    +'<div><div style="font-family:monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:5px;">Creative Intelligence Report</div>'
+    +'<div style="font-size:22px;font-weight:500;">'+brand+'</div>'
+    +'<div style="font-size:13px;color:#555;margin-top:3px;">'+platform+' · '+(m.objective||'').toUpperCase().replace('_',' ')+'</div></div>'
+    +'<div style="text-align:right;"><div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Creative Score</div>'
+    +'<div style="font-family:monospace;font-size:52px;font-weight:700;color:'+scoreColor+';line-height:1;">'+score+'<span style="font-size:18px;color:#333;">/100</span></div></div></div>'
+
+    + geminiHTML
+
+    +'<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;margin-bottom:20px;">'
+    +'<div style="font-family:monospace;font-size:9px;letter-spacing:0.12em;color:#444;text-transform:uppercase;margin-bottom:14px;">Video Structure Timeline</div>'
+    +'<div style="display:flex;justify-content:space-between;font-family:monospace;font-size:10px;color:#333;margin-bottom:6px;">'
+    +'<span>0s</span><span>'+Math.round(dur*0.25)+'s</span><span>'+Math.round(dur*0.5)+'s</span><span>'+Math.round(dur*0.75)+'s</span><span>'+dur+'s</span></div>'
+    +'<div style="display:flex;height:44px;border-radius:6px;overflow:hidden;gap:2px;margin-bottom:12px;">'+timelineHTML+'</div>'
+    +'<div style="display:flex;justify-content:space-between;font-family:monospace;font-size:10px;color:#444;">'
+    +(d.annotations||[]).map(function(a){return '<span>'+a.label+'</span>';}).join('')
+    +'</div></div>'
+
+    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">'
+    +[
+      ['Hook Retention', d.hook_retention_pct+'%', d.hook_retention_pct],
+      ['Avg Watch Time', d.avg_watch_time_s+'s / '+dur+'s', (d.avg_watch_time_s/dur)*100],
+      ['CTA Tap Rate', d.cta_tap_rate_pct+'%', d.cta_tap_rate_pct*10],
+      ['Authenticity', d.authenticity_score+'/100', d.authenticity_score]
+    ].map(function(m){
+      return '<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px;">'
+        +'<div style="font-family:monospace;font-size:8px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">'+m[0]+'</div>'
+        +'<div style="height:2px;background:#151515;border-radius:1px;margin-bottom:8px;overflow:hidden;">'
+        +'<div style="height:100%;width:'+Math.min(m[2],100)+'%;background:#ff4d00;border-radius:1px;"></div></div>'
+        +'<div style="font-family:monospace;font-size:18px;font-weight:700;">'+m[1]+'</div></div>';
+    }).join('')
+    +'</div>'
+
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">'
+    +'<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;">'
+    +'<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Hook Analysis</div>'
+    +'<div style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:4px;font-family:monospace;font-size:10px;margin-bottom:10px;background:#ff4d0018;color:#ff4d00;border:1px solid #ff4d0028;">'+d.hook_score_label+' · '+d.hook_score+'/100</div>'
+    +'<div style="font-size:13px;line-height:1.75;color:#777;">'+( d.hook_analysis||'—')+'</div></div>'
+    +'<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;">'
+    +'<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Authenticity</div>'
+    +'<div style="font-family:monospace;font-size:26px;font-weight:700;margin-bottom:6px;">'+d.authenticity_score+'/100</div>'
+    +'<div style="height:5px;background:#111;border-radius:3px;overflow:hidden;margin-bottom:10px;">'
+    +'<div style="height:100%;width:'+d.authenticity_score+'%;background:linear-gradient(90deg,#ff4d00,#ffb800,#00c47a);border-radius:3px;"></div></div>'
+    +'<div style="font-size:13px;line-height:1.75;color:#777;">'+(d.authenticity_analysis||'—')+'</div></div>'
+    +'<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;">'
+    +'<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">Pacing Analysis</div>'
+    +'<div style="font-size:13px;line-height:1.75;color:#777;">'+(d.pacing_analysis||'—')+'</div></div>'
+    +'<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;">'
+    +'<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:12px;">CTA Analysis</div>'
+    +'<div style="font-size:13px;line-height:1.75;color:#777;">'+(d.cta_analysis||'—')+'</div></div>'
+    +'</div>'
+
+    +'<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;margin-bottom:20px;">'
+    +'<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">Improvement Recommendations</div>'
+    + recsHTML +'</div>'
+
+    +'<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;margin-bottom:20px;">'
+    +'<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">Alternative Hook Ideas</div>'
+    + hooksHTML +'</div>'
+
+    +'<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:20px;margin-bottom:20px;">'
+    +'<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">Rewrite Variants</div>'
+    + rwHTML +'</div>'
+
+    +'<div style="padding:16px 0;border-top:1px solid #1a1a1a;font-family:monospace;font-size:10px;color:#333;display:flex;gap:20px;">'
+    +'<span>victorxuorigins.github.io/ugc-creative-analyzer</span>'
+    +'<span>Built by Victor Xu</span>'
+    +'<span>'+new Date().toLocaleDateString()+'</span></div>'
+    +'</body></html>';
+
+  var blob = new Blob([html], {type: 'text/html'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'ugc-report-' + brand.toLowerCase().replace(/[^a-z0-9]/g,'-') + '-' + new Date().toISOString().split('T')[0] + '.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
   var btn = document.getElementById('sharebtn');
-  navigator.clipboard.writeText(lines.join('\n')).then(function(){
-    btn.textContent='COPIED'; btn.style.color='#00c47a'; btn.style.borderColor='#00c47a40';
-    setTimeout(function(){btn.textContent='COPY REPORT';btn.style.color='#ff4d00';btn.style.borderColor='#ff4d0040';},2500);
-  }).catch(function(){alert('Copy failed — please manually select text.');});
+  btn.textContent = 'DOWNLOADED';
+  btn.style.color = '#00c47a';
+  btn.style.borderColor = '#00c47a40';
+  setTimeout(function(){ btn.textContent='DOWNLOAD REPORT'; btn.style.color='#ff4d00'; btn.style.borderColor='#ff4d0040'; }, 2500);
 }
 
 function resetUI() {
