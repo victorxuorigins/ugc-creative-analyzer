@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UGC Script Generator — Victor Xu</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-height:100vh;}
+.app{max-width:1100px;margin:0 auto;padding:32px 24px;}
+
+.view{display:none;}
+.view.active{display:block;}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid #1a1a1a;}
+.hdr-l{display:flex;align-items:center;gap:12px;}
+.dot{width:9px;height:9px;background:#00c47a;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+.htitle{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.16em;color:#666;text-transform:uppercase;}
+.hdr-r{display:flex;align-items:center;gap:10px;}
+.badge{font-family:'Space Mono',monospace;font-size:9px;padding:3px 8px;background:#00c47a12;border:1px solid #00c47a35;color:#00c47a;border-radius:3px;letter-spacing:0.1em;}
+.byline{font-family:'Space Mono',monospace;font-size:9px;color:#333;letter-spacing:0.08em;}
+
+/* KEY */
+.key-box{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.key-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:#444;white-space:nowrap;}
+.key-input{flex:1;min-width:200px;background:#080808;border:1px solid #1e1e1e;border-radius:6px;padding:8px 12px;color:#e8e4dc;font-family:'Space Mono',monospace;font-size:11px;outline:none;transition:border-color 0.2s;}
+.key-input:focus{border-color:#00c47a;}
+.kstatus{font-size:9px;padding:2px 7px;border-radius:3px;font-family:'Space Mono',monospace;white-space:nowrap;}
+.kset{background:#00c47a18;color:#00c47a;border:1px solid #00c47a25;}
+.kunset{background:#ff4d0012;color:#ff4d00;border:1px solid #ff4d0025;}
+.khint{font-size:11px;color:#444;}
+.khint a{color:#555;text-decoration:none;}
+
+/* FORM */
+.section-box{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:22px;margin-bottom:16px;}
+.section-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#444;margin-bottom:16px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.flabel{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;color:#555;text-transform:uppercase;}
+.finput,.fselect{background:#080808;border:1px solid #1e1e1e;border-radius:7px;padding:9px 13px;color:#e8e4dc;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color 0.2s;width:100%;}
+.finput:focus,.fselect:focus{border-color:#00c47a;}
+.fselect option{background:#0d0d0d;}
+textarea.finput{resize:vertical;min-height:80px;line-height:1.6;}
+
+/* ANGLE CHECKBOXES */
+.angle-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px;}
+.angle-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:8px 10px;background:#080808;border:1px solid #1e1e1e;border-radius:6px;transition:all 0.2s;}
+.angle-item:hover{border-color:#333;}
+.angle-item.selected{border-color:#00c47a;background:#00c47a08;}
+.angle-item input{display:none;}
+.angle-dot{width:7px;height:7px;border-radius:50%;background:#1e1e1e;flex-shrink:0;transition:background 0.2s;}
+.angle-item.selected .angle-dot{background:#00c47a;}
+.angle-text{font-size:12px;color:#777;}
+.angle-item.selected .angle-text{color:#e8e4dc;}
+
+/* BUTTONS */
+.generate-btn{width:100%;padding:15px;background:#00c47a;color:#fff;border:none;border-radius:8px;font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;margin-top:16px;}
+.generate-btn:hover{background:#00d485;transform:translateY(-1px);}
+.generate-btn:disabled{opacity:0.35;cursor:not-allowed;transform:none;}
+
+/* ERROR */
+.errmsg{background:#ff4d0010;border:1px solid #ff4d0030;border-radius:8px;padding:12px 16px;font-family:'Space Mono',monospace;font-size:11px;color:#ff4d00;margin-bottom:16px;display:none;}
+.errmsg.show{display:block;}
+
+/* LOADING */
+#view-loading{text-align:center;padding:120px 24px;}
+.spinner{width:40px;height:40px;border:2px solid #1a1a1a;border-top-color:#00c47a;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lstage{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#555;margin-bottom:6px;}
+.ldetail{font-size:13px;color:#444;}
+
+/* RESULTS */
+.results-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:20px;flex-wrap:wrap;}
+.results-meta{}
+.results-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:5px;}
+.results-brand{font-size:20px;font-weight:500;margin-bottom:3px;}
+.results-sub{font-size:13px;color:#555;}
+.count-badge{font-family:'Space Mono',monospace;font-size:11px;padding:5px 12px;background:#00c47a18;color:#00c47a;border:1px solid #00c47a30;border-radius:5px;}
+
+/* TABS */
+.filter-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.ftab{font-family:'Space Mono',monospace;font-size:9px;padding:5px 12px;border-radius:4px;cursor:pointer;letter-spacing:0.08em;text-transform:uppercase;border:1px solid #1e1e1e;background:transparent;color:#555;transition:all 0.2s;}
+.ftab:hover{border-color:#333;color:#888;}
+.ftab.active{background:#00c47a;border-color:#00c47a;color:#fff;}
+
+/* SCRIPT CARDS */
+.scripts-grid{display:flex;flex-direction:column;gap:12px;}
+.script-card{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;overflow:hidden;transition:border-color 0.2s;}
+.script-card:hover{border-color:#222;}
+.script-card-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #131313;cursor:pointer;}
+.script-card-left{display:flex;align-items:center;gap:12px;}
+.script-num{font-family:'Space Mono',monospace;font-size:10px;color:#333;width:24px;}
+.script-type{font-family:'Space Mono',monospace;font-size:9px;padding:2px 8px;border-radius:3px;letter-spacing:0.08em;text-transform:uppercase;}
+.type-comedy{background:rgba(255,184,0,0.12);color:#ffb800;border:1px solid rgba(255,184,0,0.2);}
+.type-curiosity{background:rgba(0,180,255,0.12);color:#00b4ff;border:1px solid rgba(0,180,255,0.2);}
+.type-pain{background:rgba(255,77,0,0.12);color:#ff4d00;border:1px solid rgba(255,77,0,0.2);}
+.type-pov{background:rgba(155,111,212,0.12);color:#9b6fd4;border:1px solid rgba(155,111,212,0.2);}
+.type-social{background:rgba(0,196,122,0.12);color:#00c47a;border:1px solid rgba(0,196,122,0.2);}
+.type-bold{background:rgba(255,100,100,0.12);color:#ff6464;border:1px solid rgba(255,100,100,0.2);}
+.type-edu{background:rgba(100,180,100,0.12);color:#64b464;border:1px solid rgba(100,180,100,0.2);}
+.type-story{background:rgba(200,150,50,0.12);color:#c89632;border:1px solid rgba(200,150,50,0.2);}
+.script-title{font-size:13px;font-weight:500;color:#ccc;}
+.script-meta{font-size:11px;color:#444;font-family:'Space Mono',monospace;}
+.script-card-right{display:flex;align-items:center;gap:10px;}
+.copy-btn{font-family:'Space Mono',monospace;font-size:9px;padding:4px 10px;border-radius:4px;cursor:pointer;letter-spacing:0.06em;text-transform:uppercase;border:1px solid #222;background:transparent;color:#555;transition:all 0.2s;}
+.copy-btn:hover{border-color:#444;color:#aaa;}
+.copy-btn.copied{border-color:#00c47a40;color:#00c47a;}
+.expand-icon{font-size:12px;color:#444;transition:transform 0.2s;}
+.script-card-body{padding:18px;display:none;}
+.script-card-body.open{display:block;}
+.hook-line{background:#080808;border-left:2px solid #00c47a;padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:14px;}
+.hook-label{font-family:'Space Mono',monospace;font-size:9px;color:#00c47a;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;}
+.hook-text{font-size:14px;color:#e8e4dc;line-height:1.5;}
+.script-label{font-family:'Space Mono',monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;}
+.script-text{font-size:13px;color:#888;line-height:1.8;}
+.script-notes{margin-top:12px;padding:10px 14px;background:#111;border-radius:6px;font-size:12px;color:#555;line-height:1.6;}
+.script-notes strong{color:#777;font-weight:500;}
+.timing-row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.timing-tag{font-family:'Space Mono',monospace;font-size:9px;padding:3px 8px;border-radius:3px;background:#111;color:#444;border:1px solid #1a1a1a;}
+
+/* ACTIONS */
+.actions-bar{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;}
+.action-btn{padding:12px 20px;background:transparent;border:1px solid #1a1a1a;border-radius:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;color:#555;}
+.action-btn:hover{border-color:#333;color:#888;}
+.action-btn.primary{background:#00c47a;border-color:#00c47a;color:#fff;}
+.action-btn.primary:hover{background:#00d485;}
+
+/* AT SAVE */
+.at-bar{background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.at-input{flex:1;min-width:150px;background:#080808;border:1px solid #1e1e1e;border-radius:6px;padding:8px 12px;color:#e8e4dc;font-family:'Space Mono',monospace;font-size:11px;outline:none;}
+.at-input:focus{border-color:#00c47a;}
+.at-save-btn{padding:8px 16px;background:transparent;border:1px solid #00c47a40;border-radius:6px;color:#00c47a;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;white-space:nowrap;}
+.at-save-btn:hover{background:#00c47a12;}
+.at-status{font-family:'Space Mono',monospace;font-size:10px;color:#444;}
+
+@media(max-width:680px){
+  .form-grid{grid-template-columns:1fr;}
+  .angle-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="dot"></div>
+    <span class="htitle">UGC Script Generator</span>
+  </div>
+  <div class="hdr-r">
+    <span class="byline">BY VICTOR XU</span>
+    <span class="badge">BETA</span>
+  </div>
+</div>
+
+<!-- VIEW 1: BRIEF INPUT -->
+<div class="view active" id="view-brief">
+
+  <div class="key-box">
+    <span class="key-label">Anthropic API Key</span>
+    <input type="password" class="key-input" id="ckey" placeholder="sk-ant-api03-..." oninput="updateKey()">
+    <span class="kstatus kunset" id="kstat">NOT SET</span>
+    <span class="khint">~$5 at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></span>
+  </div>
+
+  <div class="section-box">
+    <div class="section-label">Product Brief</div>
+    <div class="form-grid">
+      <div class="fg">
+        <label class="flabel">Brand / Product Name</label>
+        <input type="text" class="finput" id="brand" placeholder="e.g. Anker PowerBank Pro">
+      </div>
+      <div class="fg">
+        <label class="flabel">Platform</label>
+        <select class="fselect" id="platform">
+          <option value="tiktok">TikTok</option>
+          <option value="instagram">Instagram Reels</option>
+          <option value="youtube">YouTube Shorts</option>
+          <option value="facebook">Facebook / Meta</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="flabel">Product Category / Niche</label>
+        <input type="text" class="finput" id="niche" placeholder="e.g. consumer tech, skincare, supplements...">
+      </div>
+      <div class="fg">
+        <label class="flabel">Target Audience</label>
+        <input type="text" class="finput" id="audience" placeholder="e.g. gym-goers 18-35, working moms, college students...">
+      </div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="flabel">What does the product do? What problem does it solve?</label>
+        <textarea class="finput" id="product-desc" rows="3" placeholder="e.g. A portable charger that charges phones 3x faster than standard chargers. Solves dead battery anxiety for people who are always on the go..."></textarea>
+      </div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="flabel">Key features / unique selling points (list them)</label>
+        <textarea class="finput" id="features" rows="3" placeholder="e.g. 20,000mAh capacity, charges 3 devices simultaneously, fits in pocket, 90-minute full charge, works with all USB-C devices..."></textarea>
+      </div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="flabel">Price point</label>
+        <input type="text" class="finput" id="price" placeholder="e.g. $49.99, £14.95, free with subscription...">
+      </div>
+      <div class="fg" style="grid-column:1/-1">
+        <label class="flabel">Competitor context (optional)</label>
+        <input type="text" class="finput" id="competitor" placeholder="e.g. Half the price of Mophie, smells identical to Sauvage, beats the Apple version on battery life...">
+      </div>
+    </div>
+  </div>
+
+  <div class="section-box">
+    <div class="section-label">Ad Objective & Angle Selection</div>
+    <div class="form-grid" style="margin-bottom:16px;">
+      <div class="fg">
+        <label class="flabel">Ad Objective</label>
+        <select class="fselect" id="objective">
+          <option value="conversion">Conversion / Purchase</option>
+          <option value="awareness">Brand Awareness</option>
+          <option value="app_install">App Install</option>
+          <option value="lead_gen">Lead Generation</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="flabel">Number of scripts to generate</label>
+        <select class="fselect" id="count">
+          <option value="10">10 scripts</option>
+          <option value="20" selected>20 scripts</option>
+          <option value="30">30 scripts</option>
+        </select>
+      </div>
+    </div>
+    <div class="flabel" style="margin-bottom:10px;">Hook angles to include (select all that apply)</div>
+    <div class="angle-grid" id="angle-grid">
+      <div class="angle-item selected" data-angle="comedy">
+        <div class="angle-dot"></div>
+        <span class="angle-text">Comedy / Skit</span>
+      </div>
+      <div class="angle-item selected" data-angle="curiosity">
+        <div class="angle-dot"></div>
+        <span class="angle-text">Curiosity Gap</span>
+      </div>
+      <div class="angle-item selected" data-angle="pain">
+        <div class="angle-dot"></div>
+        <span class="angle-text">Pain Point</span>
+      </div>
+      <div class="angle-item selected" data-angle="pov">
+        <div class="angle-dot"></div>
+        <span class="angle-text">POV / Relatable</span>
+      </div>
+      <div class="angle-item selected" data-angle="social">
+        <div class="angle-dot"></div>
+        <span class="angle-text">Social Proof</span>
+      </div>
+      <div class="angle-item selected" data-angle="bold">
+        <div class="angle-dot"></div>
+        <span class="angle-text">Bold Claim</span>
+      </div>
+      <div class="angle-item selected" data-angle="edu">
+        <div class="angle-dot"></div>
+        <span class="angle-text">Education / Feature</span>
+      </div>
+      <div class="angle-item selected" data-angle="story">
+        <div class="angle-dot"></div>
+        <span class="angle-text">Storytelling</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="errmsg" id="errmsg"></div>
+  <button class="generate-btn" onclick="generateScripts()">⚡ GENERATE SCRIPTS</button>
+</div>
+
+<!-- VIEW 2: LOADING -->
+<div class="view" id="view-loading">
+  <div class="spinner"></div>
+  <div class="lstage" id="lstage">GENERATING</div>
+  <div class="ldetail" id="ldetail">Writing hook variants...</div>
+</div>
+
+<!-- VIEW 3: RESULTS -->
+<div class="view" id="view-results">
+
+  <div class="results-header">
+    <div class="results-meta">
+      <div class="results-title">Generated Scripts</div>
+      <div class="results-brand" id="r-brand">—</div>
+      <div class="results-sub" id="r-sub">—</div>
+    </div>
+    <span class="count-badge" id="r-count">0 scripts</span>
+  </div>
+
+  <div class="filter-tabs" id="filter-tabs"></div>
+
+  <div class="scripts-grid" id="scripts-grid"></div>
+
+  <div class="at-bar" id="at-bar">
+    <span style="font-family:'Space Mono',monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.1em;white-space:nowrap;">Save all to Airtable</span>
+    <input type="password" class="at-input" id="at-key" placeholder="Airtable API Key (patXXX...)">
+    <input type="text" class="at-input" id="at-base" placeholder="Base ID (appXXX...)">
+    <button class="at-save-btn" onclick="saveAllToAirtable()">SAVE ALL</button>
+    <span class="at-status" id="at-status"></span>
+  </div>
+
+  <div class="actions-bar">
+    <button class="action-btn" onclick="downloadTxt()">⬇ DOWNLOAD TXT</button>
+    <button class="action-btn" onclick="downloadPDF()">⬇ DOWNLOAD PDF</button>
+    <button class="action-btn" onclick="showView('view-brief')">↺ NEW BRIEF</button>
+    <a href="index.html" style="text-decoration:none;">
+      <button class="action-btn">→ OPEN ANALYZER</button>
+    </a>
+    <a href="index.html" style="text-decoration:none;margin-left:auto;">
+      <button class="action-btn" style="border-color:#00c47a40;color:#00c47a;">⟳ ANALYZE A VIDEO</button>
+    </a>
+  </div>
+</div>
+
+</div>
+
+<script>
+var scripts = [];
+var currentFilter = 'all';
+var briefData = {};
+
+var TYPE_STYLES = {
+  comedy:'type-comedy', curiosity:'type-curiosity', pain:'type-pain',
+  pov:'type-pov', social:'type-social', bold:'type-bold',
+  edu:'type-edu', story:'type-story'
+};
+
+var TYPE_LABELS = {
+  comedy:'COMEDY', curiosity:'CURIOSITY GAP', pain:'PAIN POINT',
+  pov:'POV', social:'SOCIAL PROOF', bold:'BOLD CLAIM',
+  edu:'EDUCATION', story:'STORYTELLING'
+};
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+function updateKey() {
+  var v = document.getElementById('ckey').value.trim();
+  var el = document.getElementById('kstat');
+  if (v.length > 10 && v.substring(0,6) === 'sk-ant') {
+    el.textContent='SET'; el.className='kstatus kset';
+  } else {
+    el.textContent='NOT SET'; el.className='kstatus kunset';
+  }
+}
+
+document.querySelectorAll('.angle-item').forEach(function(el) {
+  el.addEventListener('click', function() {
+    el.classList.toggle('selected');
+  });
+});
+
+function showErr(msg) {
+  var e = document.getElementById('errmsg');
+  e.textContent = msg; e.classList.add('show');
+}
+function hideErr() { document.getElementById('errmsg').classList.remove('show'); }
+
+function getSelectedAngles() {
+  var selected = [];
+  document.querySelectorAll('.angle-item.selected').forEach(function(el) {
+    selected.push(el.getAttribute('data-angle'));
+  });
+  return selected;
+}
+
+function generateScripts() {
+  hideErr();
+  var ck = document.getElementById('ckey').value.trim();
+  var brand = document.getElementById('brand').value.trim();
+  var platform = document.getElementById('platform').value;
+  var niche = document.getElementById('niche').value.trim();
+  var audience = document.getElementById('audience').value.trim();
+  var desc = document.getElementById('product-desc').value.trim();
+  var features = document.getElementById('features').value.trim();
+  var price = document.getElementById('price').value.trim();
+  var competitor = document.getElementById('competitor').value.trim();
+  var objective = document.getElementById('objective').value;
+  var count = parseInt(document.getElementById('count').value);
+  var angles = getSelectedAngles();
+
+  if (!ck || ck.substring(0,6) !== 'sk-ant') { showErr('Please enter your Anthropic API key.'); return; }
+  if (!brand) { showErr('Please enter a brand or product name.'); return; }
+  if (!desc) { showErr('Please describe what the product does.'); return; }
+  if (angles.length === 0) { showErr('Please select at least one hook angle.'); return; }
+
+  briefData = { brand, platform, niche, audience, desc, features, price, competitor, objective, count, angles };
+
+  showView('view-loading');
+
+  var systemPrompt = 'You are an expert UGC ad scriptwriter with deep knowledge of performance marketing for DTC brands. You have studied thousands of top-performing TikTok, Instagram Reels, and YouTube Shorts ads.\n\nCORE PHILOSOPHY:\n- UGC ads work because they feel like peer recommendations, not ads\n- The worthy exchange principle: even knowing it is an ad, the content must justify the viewer\'s attention through entertainment, education, or emotional value\n- The best hooks use comedy, entertainment, or strong curiosity gaps — not just pain points\n- Creator face should appear within the first 3-6 seconds\n- Never oversell — the product should feel like a natural solution discovery, not a pitch\n- Authenticity signals matter: natural speech, specific details, genuine enthusiasm over scripted excitement\n- The product should appear as early as possible WITHOUT alienating viewers — strong hooks earn the right to delay the product reveal\n\nFATAL FLAWS TO AVOID IN EVERY SCRIPT:\n1. Opening with the brand name or product\n2. Generic enthusiasm without specific detail\n3. Predictable problem-product-features-buy structure with no surprise\n4. Weak or absent CTA\n5. No entertainment or exchange value\n\nSCRIPT REQUIREMENTS:\n- Every script must specify exact timing for each section\n- Hook must be in the first 1.5-2 seconds for TikTok, 2s for Instagram, 3s for YouTube\n- Scripts should be written as the creator would actually speak — natural, conversational, specific\n- Include stage directions for visual elements\n- Each script needs a distinct angle and creative concept — no repetition\n- CTAs must be short and confident: "link in bio", "tap below", "check it out" — not long explanations';
+
+  var userPrompt = 'Generate ' + count + ' unique UGC ad scripts for the following brief.\n\nPRODUCT BRIEF:\nBrand/Product: ' + brand + '\nPlatform: ' + platform + '\nNiche/Category: ' + (niche||'Unknown') + '\nTarget Audience: ' + (audience||'General') + '\nWhat it does / problem it solves: ' + desc + '\nKey features/USPs: ' + (features||'Not specified') + '\nPrice: ' + (price||'Not specified') + '\nCompetitor context: ' + (competitor||'None provided') + '\nAd Objective: ' + objective + '\nHook angles to use: ' + angles.join(', ') + '\n\nDistribute the scripts across these angles: ' + angles.join(', ') + '. Make sure each script has a genuinely different creative concept — not just different words for the same idea.\n\nReturn ONLY a valid JSON array, no markdown:\n[\n  {\n    "id": 1,\n    "angle": "<one of: comedy, curiosity, pain, pov, social, bold, edu, story>",\n    "title": "<5-8 word description of the creative concept>",\n    "hook": "<the exact opening line or visual description — first 2 seconds>",\n    "full_script": "<the complete script written as the creator would speak, with stage directions in [brackets]>",\n    "timing": "<e.g. 0-2s hook, 2-8s problem, 8-18s product, 18-25s social proof, 25-30s CTA>",\n    "why_it_works": "<1-2 sentences on the psychology behind this approach>",\n    "best_for": "<what type of creator or context this works best for>"\n  }\n]';
+
+  document.getElementById('lstage').textContent = 'GENERATING';
+  document.getElementById('ldetail').textContent = 'Writing ' + count + ' unique script variants...';
+
+  fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ck,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 8000,
+      temperature: 1,
+      system: systemPrompt,
+      messages: [{role:'user', content: userPrompt}]
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) throw new Error('Claude error: ' + d.error.message);
+    var text = d.content[0].text;
+    var match = text.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('Could not parse scripts from response');
+    scripts = JSON.parse(match[0]);
+    renderResults();
+  })
+  .catch(function(err) {
+    showView('view-brief');
+    showErr('Generation failed: ' + err.message);
+  });
+}
+
+function renderResults() {
+  showView('view-results');
+  var b = briefData;
+
+  document.getElementById('r-brand').textContent = b.brand;
+  document.getElementById('r-sub').textContent = b.platform.toUpperCase() + ' · ' + b.niche + ' · ' + b.objective.toUpperCase().replace('_',' ');
+  document.getElementById('r-count').textContent = scripts.length + ' scripts';
+
+  // Build filter tabs
+  var angleCounts = {all: scripts.length};
+  scripts.forEach(function(s) {
+    angleCounts[s.angle] = (angleCounts[s.angle]||0) + 1;
+  });
+
+  var tabsHTML = '';
+  Object.keys(angleCounts).forEach(function(k) {
+    var label = k === 'all' ? 'ALL' : (TYPE_LABELS[k]||k.toUpperCase());
+    tabsHTML += '<button class="ftab' + (k==='all'?' active':'') + '" onclick="filterBy(\''+k+'\')" id="ftab-'+k+'">'+label+' ('+angleCounts[k]+')</button>';
+  });
+  document.getElementById('filter-tabs').innerHTML = tabsHTML;
+
+  renderScripts();
+}
+
+function filterBy(angle) {
+  currentFilter = angle;
+  document.querySelectorAll('.ftab').forEach(function(t) { t.classList.remove('active'); });
+  var tab = document.getElementById('ftab-' + angle);
+  if (tab) tab.classList.add('active');
+  renderScripts();
+}
+
+function renderScripts() {
+  var filtered = currentFilter === 'all' ? scripts : scripts.filter(function(s){ return s.angle === currentFilter; });
+  var html = '';
+
+  filtered.forEach(function(s, i) {
+    var typeStyle = TYPE_STYLES[s.angle] || 'type-edu';
+    var typeLabel = TYPE_LABELS[s.angle] || s.angle.toUpperCase();
+    html += '<div class="script-card">';
+    html += '<div class="script-card-header" onclick="toggleCard(this)">';
+    html += '<div class="script-card-left">';
+    html += '<span class="script-num">' + String(s.id||i+1).padStart(2,'0') + '</span>';
+    html += '<span class="script-type ' + typeStyle + '">' + typeLabel + '</span>';
+    html += '<span class="script-title">' + (s.title||'Script '+(i+1)) + '</span>';
+    html += '</div>';
+    html += '<div class="script-card-right">';
+    html += '<button class="copy-btn" onclick="copyScript(event, ' + i + ')">COPY</button>';
+    html += '<span class="expand-icon" id="ei-'+i+'">▼</span>';
+    html += '</div></div>';
+    html += '<div class="script-card-body" id="scb-'+i+'">';
+    html += '<div class="hook-line"><div class="hook-label">Hook (first 2s)</div><div class="hook-text">' + escHTML(s.hook||'') + '</div></div>';
+    if (s.timing) html += '<div class="timing-row"><span class="timing-tag">⏱ ' + escHTML(s.timing) + '</span></div>';
+    html += '<div class="script-label" style="margin-top:14px;">Full Script</div>';
+    html += '<div class="script-text">' + escHTML(s.full_script||'').replace(/\n/g,'<br>') + '</div>';
+    if (s.why_it_works) html += '<div class="script-notes"><strong>Why it works:</strong> ' + escHTML(s.why_it_works) + '</div>';
+    if (s.best_for) html += '<div class="script-notes" style="margin-top:6px;"><strong>Best for:</strong> ' + escHTML(s.best_for) + '</div>';
+    html += '</div></div>';
+  });
+
+  document.getElementById('scripts-grid').innerHTML = html;
+}
+
+function toggleCard(header) {
+  var body = header.nextElementSibling;
+  var isOpen = body.classList.contains('open');
+  body.classList.toggle('open');
+  var icon = header.querySelector('.expand-icon');
+  if (icon) icon.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+function copyScript(e, idx) {
+  e.stopPropagation();
+  var filtered = currentFilter === 'all' ? scripts : scripts.filter(function(s){ return s.angle === currentFilter; });
+  var s = filtered[idx];
+  if (!s) return;
+  var text = 'HOOK:\n' + (s.hook||'') + '\n\nFULL SCRIPT:\n' + (s.full_script||'') + '\n\nTIMING: ' + (s.timing||'') + '\n\nWHY IT WORKS: ' + (s.why_it_works||'');
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = e.target;
+    btn.textContent = 'COPIED';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent='COPY'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function escHTML(str) {
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function downloadTxt() {
+  var b = briefData;
+  var lines = ['UGC SCRIPTS — ' + b.brand, b.platform.toUpperCase() + ' · ' + b.niche, 'Generated by victorxuorigins.github.io', new Date().toLocaleDateString(), '='.repeat(60), ''];
+  scripts.forEach(function(s, i) {
+    lines.push('SCRIPT ' + String(i+1).padStart(2,'0') + ' — ' + (TYPE_LABELS[s.angle]||s.angle.toUpperCase()) + ': ' + (s.title||''));
+    lines.push('-'.repeat(40));
+    lines.push('HOOK: ' + (s.hook||''));
+    lines.push('TIMING: ' + (s.timing||''));
+    lines.push('');
+    lines.push('FULL SCRIPT:');
+    lines.push(s.full_script||'');
+    lines.push('');
+    lines.push('WHY IT WORKS: ' + (s.why_it_works||''));
+    lines.push('BEST FOR: ' + (s.best_for||''));
+    lines.push('');
+  });
+
+  var blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'ugc-scripts-txt-' + b.brand.toLowerCase().replace(/[^a-z0-9]/g,'-') + '-' + new Date().toISOString().split('T')[0] + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function saveAllToAirtable() {
+  var ak = document.getElementById('at-key').value.trim();
+  var ab = document.getElementById('at-base').value.trim();
+  var st = document.getElementById('at-status');
+  var btn = document.querySelector('.at-save-btn');
+
+  if (!ak || !ab) { st.textContent = 'Enter Airtable credentials first'; st.style.color='#ff4d00'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'SAVING...';
+  st.textContent = '';
+
+  var b = briefData;
+  var records = scripts.map(function(s) {
+    return {fields: {
+      'Product Brief': b.brand + ' — ' + b.niche,
+      'Hook Type': TYPE_LABELS[s.angle] || s.angle,
+      'Angle': s.title || '',
+      'Full Script': (s.hook||'') + '\n\n' + (s.full_script||''),
+      'Tested?': false,
+      'Result': 'Untested'
+    }};
+  });
+
+  var url = 'https://api.airtable.com/v0/' + ab + '/' + encodeURIComponent('Scripts Generated');
+  var batches = [];
+  for (var i = 0; i < records.length; i += 10) {
+    batches.push(records.slice(i, i + 10));
+  }
+
+  var saved = 0;
+  function saveBatch(idx) {
+    if (idx >= batches.length) {
+      btn.disabled = false;
+      btn.textContent = 'SAVED ✓';
+      btn.style.borderColor = '#00c47a';
+      st.textContent = saved + ' scripts saved';
+      st.style.color = '#00c47a';
+      return;
+    }
+    fetch(url, {
+      method: 'POST',
+      headers: {'Authorization':'Bearer '+ak,'Content-Type':'application/json'},
+      body: JSON.stringify({records: batches[idx]})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error.message);
+      saved += batches[idx].length;
+      st.textContent = 'Saving... ' + saved + '/' + records.length;
+      saveBatch(idx + 1);
+    })
+    .catch(function(err) {
+      btn.disabled = false;
+      btn.textContent = 'RETRY';
+      st.textContent = 'Error: ' + err.message;
+      st.style.color = '#ff4d00';
+    });
+  }
+
+  saveBatch(0);
+}
+
+function downloadPDF() {
+  if (!scripts || scripts.length === 0) return;
+  var b = briefData;
+  var doc = new window.jspdf.jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+  var pageW = doc.internal.pageSize.getWidth();
+  var margin = 16;
+  var contentW = pageW - margin * 2;
+  var y = margin;
+
+  function checkPage(needed) {
+    if (y + needed > doc.internal.pageSize.getHeight() - margin) {
+      doc.addPage();
+      y = margin;
+    }
+  }
+
+  function addText(text, size, color, isBold, maxW) {
+    doc.setFontSize(size || 10);
+    doc.setTextColor(color || '#e8e4dc');
+    if (isBold) doc.setFont('helvetica','bold');
+    else doc.setFont('helvetica','normal');
+    var lines = doc.splitTextToSize(text || '', maxW || contentW);
+    checkPage(lines.length * (size || 10) * 0.4 + 3);
+    doc.text(lines, margin, y);
+    y += lines.length * (size || 10) * 0.4 + 2;
+  }
+
+  // Dark background
+  doc.setFillColor(8, 8, 8);
+  doc.rect(0, 0, pageW, doc.internal.pageSize.getHeight(), 'F');
+
+  // Header
+  doc.setFillColor(13, 13, 13);
+  doc.rect(0, 0, pageW, 28, 'F');
+  doc.setFontSize(7);
+  doc.setTextColor(100, 100, 100);
+  doc.setFont('helvetica','normal');
+  doc.text('UGC SCRIPT GENERATOR  ·  BY VICTOR XU', margin, 10);
+  doc.setFontSize(14);
+  doc.setTextColor(232, 228, 220);
+  doc.setFont('helvetica','bold');
+  doc.text(b.brand || 'Unknown Brand', margin, 20);
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  doc.setFont('helvetica','normal');
+  doc.text((b.platform||'').toUpperCase() + '  ·  ' + (b.niche||'').toUpperCase() + '  ·  ' + scripts.length + ' SCRIPTS  ·  ' + new Date().toLocaleDateString(), margin, 26);
+
+  y = 36;
+
+  var typeColors = {
+    comedy: [255, 184, 0], curiosity: [0, 180, 255], pain: [255, 77, 0],
+    pov: [155, 111, 212], social: [0, 196, 122], bold: [255, 100, 100],
+    edu: [100, 180, 100], story: [200, 150, 50]
+  };
+
+  var typeLabels = {
+    comedy:'COMEDY', curiosity:'CURIOSITY GAP', pain:'PAIN POINT',
+    pov:'POV', social:'SOCIAL PROOF', bold:'BOLD CLAIM',
+    edu:'EDUCATION', story:'STORYTELLING'
+  };
+
+  scripts.forEach(function(s, i) {
+    checkPage(50);
+    var col = typeColors[s.angle] || [150, 150, 150];
+
+    // Script header bar
+    doc.setFillColor(18, 18, 18);
+    doc.roundedRect(margin, y, contentW, 10, 2, 2, 'F');
+    doc.setFillColor(col[0], col[1], col[2]);
+    doc.roundedRect(margin, y, 3, 10, 1, 1, 'F');
+
+    doc.setFontSize(7);
+    doc.setTextColor(col[0], col[1], col[2]);
+    doc.setFont('helvetica','bold');
+    doc.text(String(i+1).padStart(2,'0') + '  ' + (typeLabels[s.angle]||s.angle.toUpperCase()), margin + 6, y + 6.5);
+
+    doc.setTextColor(180, 180, 180);
+    doc.setFont('helvetica','normal');
+    doc.text(s.title || '', margin + 50, y + 6.5);
+
+    if (s.timing) {
+      doc.setTextColor(80, 80, 80);
+      var timingText = s.timing;
+      doc.text(timingText, pageW - margin - doc.getTextWidth(timingText), y + 6.5);
+    }
+    y += 13;
+
+    // Hook box
+    doc.setFillColor(8, 8, 8);
+    doc.setDrawColor(0, 196, 122);
+    doc.setLineWidth(0.5);
+    doc.roundedRect(margin, y, contentW, 1, 0, 0, 'S');
+    doc.setDrawColor(0,0,0,0);
+
+    doc.setFontSize(7);
+    doc.setTextColor(0, 196, 122);
+    doc.setFont('helvetica','bold');
+    doc.text('HOOK (FIRST 2s)', margin, y + 5);
+    y += 7;
+
+    doc.setFontSize(9);
+    doc.setTextColor(220, 220, 220);
+    doc.setFont('helvetica','bold');
+    var hookLines = doc.splitTextToSize(s.hook || '', contentW);
+    checkPage(hookLines.length * 4 + 6);
+    doc.text(hookLines, margin, y);
+    y += hookLines.length * 4 + 5;
+
+    // Full script
+    doc.setFontSize(7);
+    doc.setTextColor(80, 80, 80);
+    doc.setFont('helvetica','bold');
+    doc.text('FULL SCRIPT', margin, y);
+    y += 5;
+
+    doc.setFontSize(8.5);
+    doc.setTextColor(140, 140, 140);
+    doc.setFont('helvetica','normal');
+    var scriptLines = doc.splitTextToSize(s.full_script || '', contentW);
+    checkPage(scriptLines.length * 3.8);
+    doc.text(scriptLines, margin, y);
+    y += scriptLines.length * 3.8 + 4;
+
+    // Why it works
+    if (s.why_it_works) {
+      doc.setFontSize(7);
+      doc.setTextColor(80, 80, 80);
+      doc.setFont('helvetica','bold');
+      doc.text('WHY IT WORKS', margin, y);
+      y += 4;
+      doc.setFont('helvetica','normal');
+      doc.setTextColor(100, 100, 100);
+      var whyLines = doc.splitTextToSize(s.why_it_works, contentW);
+      checkPage(whyLines.length * 3.5 + 6);
+      doc.text(whyLines, margin, y);
+      y += whyLines.length * 3.5;
+    }
+
+    y += 10;
+
+    // Refill dark background on new pages
+    if (y > doc.internal.pageSize.getHeight() - margin - 5) {
+      doc.setFillColor(8, 8, 8);
+      doc.rect(0, 0, pageW, doc.internal.pageSize.getHeight(), 'F');
+    }
+  });
+
+  doc.save('ugc-scripts-' + (b.brand||'unknown').toLowerCase().replace(/[^a-z0-9]/g,'-') + '-' + new Date().toISOString().split('T')[0] + '.pdf');
+}
+</script>
+</body>
+</html>
