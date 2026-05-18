@@ -361,6 +361,24 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
     <button class="savebtn" id="savebtn" onclick="doSave()">SAVE TO LIBRARY</button>
   </div>
 
+  <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:22px;margin-bottom:16px;">
+    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:14px;">Your Assessment — Calibration Layer</div>
+    <div style="display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:start;">
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">My Score (0-100)</div>
+        <input type="number" id="my-score" min="0" max="100" placeholder="e.g. 72"
+          style="background:#080808;border:1px solid #1e1e1e;border-radius:6px;padding:9px 12px;color:#e8e4dc;font-family:'Space Mono',monospace;font-size:14px;outline:none;width:100%;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='#ff4d00'" onblur="this.style.borderColor='#1e1e1e'">
+      </div>
+      <div>
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">My Notes — what did the AI get right or wrong?</div>
+        <textarea id="my-notes" rows="3" placeholder="e.g. AI overscored the hook — creator face doesn't appear until 4s which is a fatal flaw. Should be 58 not 74."
+          style="background:#080808;border:1px solid #1e1e1e;border-radius:6px;padding:9px 12px;color:#e8e4dc;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='#ff4d00'" onblur="this.style.borderColor='#1e1e1e'"></textarea>
+      </div>
+    </div>
+  </div>
+
   <div class="rfooter">
     <span class="fi" id="fp"></span>
     <span class="fi" id="fo"></span>
@@ -708,7 +726,9 @@ function doSave() {
     'Recommendations': recsStr,
     'Alternative Hooks': hooksStr,
     'Rewrite Variants': rwStr,
-    'Analysis Output': fullAnalysis.substring(0,100000)
+    'Analysis Output': fullAnalysis.substring(0,100000),
+    'My Score': parseInt(document.getElementById('my-score').value)||0,
+    'My Notes': document.getElementById('my-notes').value||''
   };
 
   fetch('https://api.airtable.com/v0/'+ab+'/'+encodeURIComponent('Ads Analyzed'), {
@@ -725,30 +745,11 @@ function doSave() {
     }
     btn.textContent = 'SAVED'; btn.style.borderColor='#00c47a';
     st.textContent = 'Saved to Airtable'; st.style.color='#00c47a';
-    saveScripts(ak, ab, m, result);
   })
   .catch(function(err){
     btn.disabled=false; btn.textContent='RETRY';
     st.textContent = err.message; st.style.color='#ff4d00';
   });
-}
-
-function saveScripts(ak, ab, m, d) {
-  var url = 'https://api.airtable.com/v0/'+ab+'/'+encodeURIComponent('Scripts Generated');
-  var records = [];
-  (d.alternative_hooks||[]).forEach(function(h){
-    records.push({fields:{'Product Brief':m.brand||'','Hook Type':h.type,'Full Script':h.text,'Tested?':false,'Result':'Untested'}});
-  });
-  (d.rewrite_variants||[]).forEach(function(r){
-    records.push({fields:{'Product Brief':m.brand||'','Hook Type':r.variant,'Full Script':r.script,'Tested?':false,'Result':'Untested'}});
-  });
-  if (records.length > 0) {
-    fetch(url, {
-      method: 'POST',
-      headers: {'Authorization':'Bearer '+ak,'Content-Type':'application/json'},
-      body: JSON.stringify({records: records.slice(0,10)})
-    }).catch(function(e){ console.log('Scripts save:', e); });
-  }
 }
 
 function downloadReport() {
@@ -832,6 +833,8 @@ function resetUI() {
   document.getElementById('savestatus').textContent = '';
   document.getElementById('savebtn').disabled = false;
   document.getElementById('savebtn').textContent = 'SAVE TO LIBRARY';
+  document.getElementById('my-score').value = '';
+  document.getElementById('my-notes').value = '';
   showView('view-upload');
 }
 </script>
