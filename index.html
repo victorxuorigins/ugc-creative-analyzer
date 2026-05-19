@@ -374,7 +374,14 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
   </div>
 
   <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:22px;margin-bottom:16px;">
-    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:14px;">Your Assessment — Calibration Layer</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;">Your Assessment — Calibration Layer</div>
+      <button id="update-scores-btn" onclick="updateScores()"
+        style="padding:7px 14px;background:transparent;border:1px solid #ff4d0040;border-radius:6px;color:#ff4d00;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;"
+        onmouseover="this.style.background='#ff4d0010'" onmouseout="this.style.background='transparent'">
+        SAVE MY SCORES
+      </button>
+    </div>
     <div style="display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:start;">
       <div>
         <div style="font-family:'Space Mono',monospace;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">My Score (0-100)</div>
@@ -389,6 +396,7 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
           onfocus="this.style.borderColor='#ff4d00'" onblur="this.style.borderColor='#1e1e1e'"></textarea>
       </div>
     </div>
+    <div id="update-scores-status" style="font-family:'Space Mono',monospace;font-size:10px;color:#444;margin-top:10px;"></div>
   </div>
 
   <div class="rfooter">
@@ -520,7 +528,7 @@ function runAnalysis() {
         var summary = 'Brand: ' + brand + ' Platform: ' + platform + ' Visual: ' + (gi ? (gi.visual_hook||'') : '') + ' Transcript: ' + (gi ? (gi.transcript||'').substring(0,300) : '');
         var timeoutPromise = new Promise(function(resolve) { setTimeout(resolve, 5000); });
         memoryPromise = Promise.race([
-          getEmbedding(gk, summary)
+          getEmbedding(summary, gk)
             .then(function(embedding) {
               ctx.queryEmbedding = embedding;
               return searchMemory(embedding, sbUrl, sbKey, 3);
@@ -811,6 +819,7 @@ function doSave() {
     }
     btn.textContent = 'SAVED'; btn.style.borderColor='#00c47a';
     st.textContent = 'Saved to Airtable'; st.style.color='#00c47a';
+    if (res.data && res.data.id) result._airtableId = res.data.id;
   })
   .catch(function(err){
     btn.disabled=false; btn.textContent='RETRY';
@@ -987,7 +996,7 @@ function saveToMemory(result, meta, geminiKey, sbUrl, sbKey) {
       });
     })
     .then(function(r) {
-      if (r.ok) console.log('Saved to memory');
+      if (r.ok) { console.log('Saved to memory'); return r.json().then(function(d){ if(d && d[0]) result._supabaseId = d[0].id; return d; }); }
       return r;
     });
 }
@@ -1045,6 +1054,89 @@ function renderSimilarAds(similarAds) {
   }
 }
 
+
+function updateScores() {
+  if (!result) return;
+  var myScore = parseInt(document.getElementById('my-score').value) || 0;
+  var myNotes = document.getElementById('my-notes').value.trim();
+  var btn = document.getElementById('update-scores-btn');
+  var status = document.getElementById('update-scores-status');
+
+  if (!myScore && !myNotes) {
+    status.textContent = 'Enter a score or notes first.';
+    status.style.color = '#ff4d00';
+    return;
+  }
+
+  btn.textContent = 'SAVING...';
+  var saved = 0;
+  var total = 0;
+
+  // Save to Airtable if connected
+  var ak = document.getElementById('atkey').value.trim();
+  var ab = document.getElementById('atbase').value.trim();
+  if (ak && ab && result._airtableId) {
+    total++;
+    fetch('https://api.airtable.com/v0/' + ab + '/Ads%20Analyzed/' + result._airtableId, {
+      method: 'PATCH',
+      headers: {'Authorization':'Bearer '+ak,'Content-Type':'application/json'},
+      body: JSON.stringify({fields:{'My Score':myScore,'My Notes':myNotes}})
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.error) throw new Error(d.error.message);
+      saved++;
+      checkDone();
+    })
+    .catch(function(e){ status.textContent = 'Airtable error: ' + e.message; status.style.color='#ff4d00'; });
+  }
+
+  // Save to Supabase if connected
+  var sbUrl = document.getElementById('sburl').value.trim();
+  var sbKey = document.getElementById('sbanonkey').value.trim();
+  if (sbUrl && sbKey && result._supabaseId) {
+    total++;
+    fetch(sbUrl + '/rest/v1/ad_memories?id=eq.' + result._supabaseId, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type':'application/json',
+        'apikey': sbKey,
+        'Authorization':'Bearer ' + sbKey
+      },
+      body: JSON.stringify({victor_score: myScore, victor_notes: myNotes})
+    })
+    .then(function(r){
+      if (r.ok) { saved++; checkDone(); }
+      else throw new Error('Supabase update failed');
+    })
+    .catch(function(e){ console.log('Supabase update:', e.message); saved++; checkDone(); });
+  }
+
+  // If neither connected, just store locally on result object
+  if (total === 0) {
+    result._myScore = myScore;
+    result._myNotes = myNotes;
+    btn.textContent = 'SAVE MY SCORES';
+    status.textContent = 'Saved locally (connect Airtable or Supabase to persist)';
+    status.style.color = '#ffb800';
+    return;
+  }
+
+  function checkDone() {
+    if (saved >= total) {
+      btn.textContent = 'SAVED';
+      btn.style.borderColor = '#00c47a40';
+      btn.style.color = '#00c47a';
+      status.textContent = 'Scores saved successfully';
+      status.style.color = '#00c47a';
+      setTimeout(function(){
+        btn.textContent = 'SAVE MY SCORES';
+        btn.style.borderColor = '#ff4d0040';
+        btn.style.color = '#ff4d00';
+      }, 3000);
+    }
+  }
+}
 
 function resetUI() {
   selFile = null; result = null; removeFile();
