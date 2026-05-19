@@ -141,7 +141,6 @@ textarea.finput{resize:vertical;min-height:80px;line-height:1.6;}
   .angle-grid{grid-template-columns:1fr 1fr;}
 }
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -305,7 +304,7 @@ textarea.finput{resize:vertical;min-height:80px;line-height:1.6;}
 
   <div class="actions-bar">
     <button class="action-btn" onclick="downloadTxt()">⬇ DOWNLOAD TXT</button>
-    <button class="action-btn" onclick="downloadPDF()">⬇ DOWNLOAD PDF</button>
+    <button class="action-btn" onclick="downloadReport()">⬇ SAVE REPORT</button>
     <button class="action-btn" onclick="showView('view-brief')">↺ NEW BRIEF</button>
     <a href="index.html" style="text-decoration:none;">
       <button class="action-btn">→ OPEN ANALYZER</button>
@@ -395,9 +394,9 @@ function generateScripts() {
 
   showView('view-loading');
 
-  var systemPrompt = 'You are an expert UGC ad scriptwriter with deep knowledge of performance marketing for DTC brands. You have studied thousands of top-performing TikTok, Instagram Reels, and YouTube Shorts ads.\n\nCORE PHILOSOPHY:\n- UGC ads work because they feel like peer recommendations, not ads\n- The worthy exchange principle: even knowing it is an ad, the content must justify the viewer\'s attention through entertainment, education, or emotional value\n- The best hooks use comedy, entertainment, or strong curiosity gaps — not just pain points\n- Creator face should appear within the first 3-6 seconds\n- Never oversell — the product should feel like a natural solution discovery, not a pitch\n- Authenticity signals matter: natural speech, specific details, genuine enthusiasm over scripted excitement\n- The product should appear as early as possible WITHOUT alienating viewers — strong hooks earn the right to delay the product reveal\n\nFATAL FLAWS TO AVOID IN EVERY SCRIPT:\n1. Opening with the brand name or product\n2. Generic enthusiasm without specific detail\n3. Predictable problem-product-features-buy structure with no surprise\n4. Weak or absent CTA\n5. No entertainment or exchange value\n\nSCRIPT REQUIREMENTS:\n- Every script must specify exact timing for each section\n- Hook must be in the first 1.5-2 seconds for TikTok, 2s for Instagram, 3s for YouTube\n- Scripts should be written as the creator would actually speak — natural, conversational, specific\n- Include stage directions for visual elements\n- Each script needs a distinct angle and creative concept — no repetition\n- CTAs must be short and confident: "link in bio", "tap below", "check it out" — not long explanations';
+  var systemPrompt = 'You are an expert UGC ad scriptwriter with deep knowledge of performance marketing for DTC brands. You have studied thousands of top-performing TikTok, Instagram Reels, and YouTube Shorts ads.\n\nCORE PHILOSOPHY:\n- UGC ads work because they feel like peer recommendations, not ads\n- The worthy exchange principle: even knowing it is an ad, the content must justify the viewer\'s attention through entertainment, education, or emotional value\n- The best hooks use comedy, entertainment, or strong curiosity gaps - not just pain points\n- Creator face should appear within the first 3-6 seconds\n- Never oversell - the product should feel like a natural solution discovery, not a pitch\n- Authenticity signals matter: natural speech, specific details, genuine enthusiasm over scripted excitement\n- The product should appear as early as possible WITHOUT alienating viewers - strong hooks earn the right to delay the product reveal\n\nFATAL FLAWS TO AVOID IN EVERY SCRIPT:\n1. Opening with the brand name or product\n2. Generic enthusiasm without specific detail\n3. Predictable problem-product-features-buy structure with no surprise\n4. Weak or absent CTA\n5. No entertainment or exchange value\n\nSCRIPT REQUIREMENTS:\n- Every script must specify exact timing for each section\n- Hook must be in the first 1.5-2 seconds for TikTok, 2s for Instagram, 3s for YouTube\n- Scripts should be written as the creator would actually speak - natural, conversational, specific\n- Include stage directions for visual elements\n- Each script needs a distinct angle and creative concept - no repetition\n- CTAs must be short and confident: "link in bio", "tap below", "check it out" - not long explanations';
 
-  var userPrompt = 'Generate ' + count + ' unique UGC ad scripts for the following brief.\n\nPRODUCT BRIEF:\nBrand/Product: ' + brand + '\nPlatform: ' + platform + '\nNiche/Category: ' + (niche||'Unknown') + '\nTarget Audience: ' + (audience||'General') + '\nWhat it does / problem it solves: ' + desc + '\nKey features/USPs: ' + (features||'Not specified') + '\nPrice: ' + (price||'Not specified') + '\nCompetitor context: ' + (competitor||'None provided') + '\nAd Objective: ' + objective + '\nHook angles to use: ' + angles.join(', ') + '\n\nDistribute the scripts across these angles: ' + angles.join(', ') + '. Make sure each script has a genuinely different creative concept — not just different words for the same idea.\n\nReturn ONLY a valid JSON array, no markdown:\n[\n  {\n    "id": 1,\n    "angle": "<one of: comedy, curiosity, pain, pov, social, bold, edu, story>",\n    "title": "<5-8 word description of the creative concept>",\n    "hook": "<the exact opening line or visual description — first 2 seconds>",\n    "full_script": "<the complete script written as the creator would speak, with stage directions in [brackets]>",\n    "timing": "<e.g. 0-2s hook, 2-8s problem, 8-18s product, 18-25s social proof, 25-30s CTA>",\n    "why_it_works": "<1-2 sentences on the psychology behind this approach>",\n    "best_for": "<what type of creator or context this works best for>"\n  }\n]';
+  var userPrompt = 'Generate ' + count + ' unique UGC ad scripts for the following brief.\n\nPRODUCT BRIEF:\nBrand/Product: ' + brand + '\nPlatform: ' + platform + '\nNiche/Category: ' + (niche||'Unknown') + '\nTarget Audience: ' + (audience||'General') + '\nWhat it does / problem it solves: ' + desc + '\nKey features/USPs: ' + (features||'Not specified') + '\nPrice: ' + (price||'Not specified') + '\nCompetitor context: ' + (competitor||'None provided') + '\nAd Objective: ' + objective + '\nHook angles to use: ' + angles.join(', ') + '\n\nDistribute the scripts across these angles: ' + angles.join(', ') + '. Make sure each script has a genuinely different creative concept - not just different words for the same idea.\n\nReturn ONLY a valid JSON array, no markdown:\n[\n  {\n    "id": 1,\n    "angle": "<one of: comedy, curiosity, pain, pov, social, bold, edu, story>",\n    "title": "<5-8 word description of the creative concept>",\n    "hook": "<the exact opening line or visual description - first 2 seconds>",\n    "full_script": "<the complete script written as the creator would speak, with stage directions in [brackets]>",\n    "timing": "<e.g. 0-2s hook, 2-8s problem, 8-18s product, 18-25s social proof, 25-30s CTA>",\n    "why_it_works": "<1-2 sentences on the psychology behind this approach>",\n    "best_for": "<what type of creator or context this works best for>"\n  }\n]';
 
   document.getElementById('lstage').textContent = 'GENERATING';
   document.getElementById('ldetail').textContent = 'Writing ' + count + ' unique script variants...';
@@ -521,6 +520,186 @@ function copyScript(e, idx) {
 function escHTML(str) {
   return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+function downloadTxt() {
+  var b = briefData;
+  var lines = ['UGC SCRIPTS — ' + b.brand, b.platform.toUpperCase() + ' · ' + b.niche, 'Generated by victorxuorigins.github.io', new Date().toLocaleDateString(), '='.repeat(60), ''];
+  scripts.forEach(function(s, i) {
+    lines.push('SCRIPT ' + String(i+1).padStart(2,'0') + ' — ' + (TYPE_LABELS[s.angle]||s.angle.toUpperCase()) + ': ' + (s.title||''));
+    lines.push('-'.repeat(40));
+    lines.push('HOOK: ' + (s.hook||''));
+    lines.push('TIMING: ' + (s.timing||''));
+    lines.push('');
+    lines.push('FULL SCRIPT:');
+    lines.push(s.full_script||'');
+    lines.push('');
+    lines.push('WHY IT WORKS: ' + (s.why_it_works||''));
+    lines.push('BEST FOR: ' + (s.best_for||''));
+    lines.push('');
+  });
+
+  var blob = new Blob([lines.join('\n')], {type:'text/plain'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'ugc-scripts-txt-' + b.brand.toLowerCase().replace(/[^a-z0-9]/g,'-') + '-' + new Date().toISOString().split('T')[0] + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function saveAllToAirtable() {
+  var ak = document.getElementById('at-key').value.trim();
+  var ab = document.getElementById('at-base').value.trim();
+  var st = document.getElementById('at-status');
+  var btn = document.querySelector('.at-save-btn');
+
+  if (!ak || !ab) { st.textContent = 'Enter Airtable credentials first'; st.style.color='#ff4d00'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'SAVING...';
+  st.textContent = '';
+
+  var b = briefData;
+  var records = scripts.map(function(s) {
+    return {fields: {
+      'Product Brief': b.brand + ' — ' + b.niche,
+      'Hook Type': TYPE_LABELS[s.angle] || s.angle,
+      'Angle': s.title || '',
+      'Hook': s.hook || '',
+      'Timing': s.timing || '',
+      'Full Script': s.full_script || '',
+      'Why It Works': s.why_it_works || '',
+      'Best For': s.best_for || '',
+      'Tested?': false,
+      'Result': 'Untested'
+    }};
+  });
+
+  var url = 'https://api.airtable.com/v0/' + ab + '/' + encodeURIComponent('Scripts Generated');
+  var batches = [];
+  for (var i = 0; i < records.length; i += 10) {
+    batches.push(records.slice(i, i + 10));
+  }
+
+  var saved = 0;
+  function saveBatch(idx) {
+    if (idx >= batches.length) {
+      btn.disabled = false;
+      btn.textContent = 'SAVED ✓';
+      btn.style.borderColor = '#00c47a';
+      st.textContent = saved + ' scripts saved';
+      st.style.color = '#00c47a';
+      return;
+    }
+    fetch(url, {
+      method: 'POST',
+      headers: {'Authorization':'Bearer '+ak,'Content-Type':'application/json'},
+      body: JSON.stringify({records: batches[idx]})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.error) throw new Error(d.error.message);
+      saved += batches[idx].length;
+      st.textContent = 'Saving... ' + saved + '/' + records.length;
+      saveBatch(idx + 1);
+    })
+    .catch(function(err) {
+      btn.disabled = false;
+      btn.textContent = 'RETRY';
+      st.textContent = 'Error: ' + err.message;
+      st.style.color = '#ff4d00';
+    });
+  }
+
+  saveBatch(0);
+}
+
+function downloadReport() {
+  if (!scripts || scripts.length === 0) return;
+  var b = briefData;
+
+  var typeColors = {
+    comedy:'#ffb800', curiosity:'#00b4ff', pain:'#ff4d00',
+    pov:'#9b6fd4', social:'#00c47a', bold:'#ff6464',
+    edu:'#64b464', story:'#c89632'
+  };
+  var typeLabels = {
+    comedy:'COMEDY', curiosity:'CURIOSITY GAP', pain:'PAIN POINT',
+    pov:'POV', social:'SOCIAL PROOF', bold:'BOLD CLAIM',
+    edu:'EDUCATION', story:'STORYTELLING'
+  };
+
+  var filtered = currentFilter === 'all' ? scripts : scripts.filter(function(s){ return s.angle === currentFilter; });
+
+  var scriptsHTML = filtered.map(function(s, i) {
+    var col = typeColors[s.angle] || '#888';
+    var lbl = typeLabels[s.angle] || s.angle.toUpperCase();
+    var html = '<div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:10px;overflow:hidden;margin-bottom:14px;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #131313;">';
+    html += '<div style="display:flex;align-items:center;gap:12px;">';
+    html += '<span style="font-family:monospace;font-size:10px;color:#333;">' + String(i+1).padStart(2,'0') + '</span>';
+    html += '<span style="font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;background:' + col + '22;color:' + col + ';border:1px solid ' + col + '44;">' + lbl + '</span>';
+    html += '<span style="font-size:13px;font-weight:500;color:#ccc;">' + (s.title || '') + '</span>';
+    html += '</div></div>';
+    html += '<div style="padding:18px;">';
+    html += '<div style="border-left:2px solid #00c47a;padding:10px 14px;margin-bottom:14px;">';
+    html += '<div style="font-family:monospace;font-size:9px;color:#00c47a;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px;">HOOK (FIRST 2s)</div>';
+    html += '<div style="font-size:14px;color:#e8e4dc;font-weight:500;">' + (s.hook || '') + '</div></div>';
+    if (s.timing) {
+      html += '<div style="font-family:monospace;font-size:9px;background:#111;border:1px solid #1a1a1a;border-radius:4px;padding:5px 10px;display:inline-block;color:#555;margin-bottom:14px;">&#9200; ' + s.timing + '</div>';
+    }
+    html += '<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;">FULL SCRIPT</div>';
+    html += '<div style="font-size:13px;color:#888;line-height:1.8;">' + (s.full_script || '').replace(/\n/g, '<br>') + '</div>';
+    if (s.why_it_works) {
+      html += '<div style="background:#111;border-radius:6px;padding:12px;margin-top:12px;">';
+      html += '<span style="font-size:12px;color:#777;font-weight:500;">Why it works: </span>';
+      html += '<span style="font-size:12px;color:#555;">' + s.why_it_works + '</span></div>';
+    }
+    if (s.best_for) {
+      html += '<div style="margin-top:8px;">';
+      html += '<span style="font-size:12px;color:#555;font-weight:500;">Best for: </span>';
+      html += '<span style="font-size:12px;color:#444;">' + s.best_for + '</span></div>';
+    }
+    html += '</div></div>';
+    return html;
+  }).join('');
+
+  var fullHTML = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    + '<title>UGC Scripts - ' + (b.brand || 'Unknown') + '</title>'
+    + '<style>body{background:#080808;color:#e8e4dc;font-family:Arial,sans-serif;max-width:900px;margin:0 auto;padding:32px 24px;}</style>'
+    + '</head><body>'
+    + '<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:16px;border-bottom:1px solid #1a1a1a;">'
+    + '<div>'
+    + '<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:5px;">UGC Script Generator · By Victor Xu</div>'
+    + '<div style="font-size:22px;font-weight:bold;">' + (b.brand || '') + '</div>'
+    + '<div style="font-size:13px;color:#555;margin-top:3px;">' + (b.platform || '').toUpperCase() + ' · ' + (b.niche || '') + ' · ' + new Date().toLocaleDateString() + '</div>'
+    + '</div>'
+    + '<div style="text-align:right;">'
+    + '<div style="font-family:monospace;font-size:9px;color:#444;text-transform:uppercase;margin-bottom:4px;">Scripts</div>'
+    + '<div style="font-family:monospace;font-size:36px;font-weight:bold;color:#00c47a;">' + filtered.length + '</div>'
+    + '</div></div>'
+    + scriptsHTML
+    + '<div style="padding:16px 0;border-top:1px solid #1a1a1a;font-family:monospace;font-size:10px;color:#333;">'
+    + 'victorxuorigins.github.io/ugc-creative-analyzer/script-generator.html · Built by Victor Xu</div>'
+    + '</body></html>';
+
+  var blob = new Blob([fullHTML], {type: 'text/html'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'ugc-scripts-' + (b.brand || 'unknown').toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + new Date().toISOString().split('T')[0] + '.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  var btn = event.target;
+  btn.textContent = '✓ SAVED';
+  setTimeout(function(){ btn.textContent = '⬇ SAVE REPORT'; }, 2000);
+}
+
 
 function downloadTxt() {
   var b = briefData;
