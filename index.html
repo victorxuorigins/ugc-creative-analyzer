@@ -367,22 +367,9 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
   <div class="hookscard"><div class="clabel">Alternative Hook Ideas</div><div id="hookslist"></div></div>
   <div class="rwcard"><div class="clabel">Rewrite Variants</div><div id="rwlist"></div></div>
 
-  <div class="savecard" id="savecard">
-    <div class="saveinfo"><strong>Save to ad library</strong> — adds to your Airtable knowledge base</div>
-    <span class="savestatus" id="savestatus"></span>
-    <button class="savebtn" id="savebtn" onclick="doSave()">SAVE TO LIBRARY</button>
-  </div>
-
-  <div style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:22px;margin-bottom:16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;">Your Assessment — Calibration Layer</div>
-      <button id="update-scores-btn" onclick="updateScores()"
-        style="padding:7px 14px;background:transparent;border:1px solid #ff4d0040;border-radius:6px;color:#ff4d00;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;text-transform:uppercase;"
-        onmouseover="this.style.background='#ff4d0010'" onmouseout="this.style.background='transparent'">
-        SAVE MY SCORES
-      </button>
-    </div>
-    <div style="display:grid;grid-template-columns:200px 1fr;gap:14px;align-items:start;">
+  <div class="savecard" id="savecard" style="flex-direction:column;align-items:stretch;">
+    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;color:#444;text-transform:uppercase;margin-bottom:14px;">Your Assessment — Calibration Layer</div>
+    <div style="display:grid;grid-template-columns:180px 1fr;gap:14px;align-items:start;margin-bottom:16px;">
       <div>
         <div style="font-family:'Space Mono',monospace;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">My Score (0-100)</div>
         <input type="number" id="my-score" min="0" max="100" placeholder="e.g. 72"
@@ -391,13 +378,19 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
       </div>
       <div>
         <div style="font-family:'Space Mono',monospace;font-size:9px;color:#555;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">My Notes — what did the AI get right or wrong?</div>
-        <textarea id="my-notes" rows="3" placeholder="e.g. AI overscored the hook — creator face doesn't appear until 4s which is a fatal flaw. Should be 58 not 74."
+        <textarea id="my-notes" rows="2" placeholder="e.g. AI overscored — creator face not visible until 4s. Should be 55 not 74."
           style="background:#080808;border:1px solid #1e1e1e;border-radius:6px;padding:9px 12px;color:#e8e4dc;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;width:100%;resize:vertical;line-height:1.6;transition:border-color 0.2s;"
           onfocus="this.style.borderColor='#ff4d00'" onblur="this.style.borderColor='#1e1e1e'"></textarea>
       </div>
     </div>
-    <div id="update-scores-status" style="font-family:'Space Mono',monospace;font-size:10px;color:#444;margin-top:10px;"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+      <div class="saveinfo"><strong>Save to ad library</strong> — saves analysis + your scores to Airtable</div>
+      <span class="savestatus" id="savestatus"></span>
+      <button class="savebtn" id="savebtn" onclick="doSave()">SAVE TO LIBRARY</button>
+    </div>
   </div>
+
+
 
   <div class="rfooter">
     <span class="fi" id="fp"></span>
