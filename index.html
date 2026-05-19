@@ -507,7 +507,7 @@ function runAnalysis() {
   var ctx = { brand: brand, platform: platform, objective: objective, niche: niche };
 
   var sbUrl = document.getElementById('sburl').value.trim();
-  var sbKey = document.getElementById('sbkey').value.trim();
+  var sbKey = document.getElementById('sbanonkey').value.trim();
 
   geminiAnalyze(gk, selFile, brand, platform)
     .then(function(gi) {
@@ -546,7 +546,7 @@ function runAnalysis() {
 
       // Save this ad to Supabase memory
       var sbUrl2 = document.getElementById('sburl').value.trim();
-      var sbKey2 = document.getElementById('sbkey').value.trim();
+      var sbKey2 = document.getElementById('sbanonkey').value.trim();
       if (sbUrl2 && sbKey2) {
         saveToMemory(cr, cr._meta, gk, sbUrl2, sbKey2)
           .catch(function(e){ console.log('Supabase save:', e.message); });
