@@ -648,7 +648,27 @@ function claudeAnalyze(ak, ctx) {
 function safeJSON(text) {
   var m = text.match(/\{[\s\S]*\}/);
   if (!m) throw new Error('Could not parse AI response');
-  return JSON.parse(m[0]);
+  var jsonStr = m[0];
+  // Remove control characters that break JSON parsing
+  jsonStr = jsonStr.replace(/[\u0000-\u001F\u007F]/g, function(ch) {
+    // Keep legitimate whitespace
+    if (ch === '\n' || ch === '\r' || ch === '\t') return ' ';
+    return '';
+  });
+  try {
+    return JSON.parse(jsonStr);
+  } catch(e) {
+    // Try to fix common issues - truncated strings, trailing commas
+    jsonStr = jsonStr
+      .replace(/,\s*}/g, '}')
+      .replace(/,\s*]/g, ']')
+      .replace(/([^\\])"\s*\n\s*"/g, '$1" "');
+    try {
+      return JSON.parse(jsonStr);
+    } catch(e2) {
+      throw new Error('Could not parse AI response: ' + e2.message);
+    }
+  }
 }
 
 function renderResults(d, g, brand, platform, objective) {
