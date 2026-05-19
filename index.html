@@ -513,21 +513,25 @@ function runAnalysis() {
     .then(function(gi) {
       ctx.gemini = gi;
       ctx.script = gi ? (gi.transcript || '') : '';
-      // Search memory for similar ads if Supabase connected
+      // Search memory with timeout - never blocks Claude
+      ctx.similarAds = [];
+      var memoryPromise = Promise.resolve();
       if (sbUrl && sbKey) {
-        var summary = 'Brand: ' + brand + ' Platform: ' + platform + ' Niche: ' + (niche||'') + ' Visual: ' + (gi ? (gi.visual_hook||'') : '') + ' Transcript: ' + (gi ? (gi.transcript||'').substring(0,500) : '');
-        return getEmbedding(gk, summary)
-          .then(function(embedding) {
-            ctx.queryEmbedding = embedding;
-            return searchMemory(embedding, sbUrl, sbKey, 3);
-          })
-          .then(function(similarAds) {
-            ctx.similarAds = similarAds;
-            console.log('Found ' + similarAds.length + ' similar ads in memory');
-            return claudeAnalyze(ck, ctx);
-          });
+        var summary = 'Brand: ' + brand + ' Platform: ' + platform + ' Visual: ' + (gi ? (gi.visual_hook||'') : '') + ' Transcript: ' + (gi ? (gi.transcript||'').substring(0,300) : '');
+        var timeoutPromise = new Promise(function(resolve) { setTimeout(resolve, 5000); });
+        memoryPromise = Promise.race([
+          getEmbedding(gk, summary)
+            .then(function(embedding) {
+              ctx.queryEmbedding = embedding;
+              return searchMemory(embedding, sbUrl, sbKey, 3);
+            })
+            .then(function(similarAds) {
+              ctx.similarAds = similarAds || [];
+            }),
+          timeoutPromise
+        ]).catch(function() { ctx.similarAds = []; });
       }
-      return claudeAnalyze(ck, ctx);
+      return memoryPromise.then(function() { return claudeAnalyze(ck, ctx); });
     })
     .then(function(cr) {
       stopLoad();
