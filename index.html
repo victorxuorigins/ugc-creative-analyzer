@@ -279,6 +279,17 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
       <input type="text" class="kinput" id="atbase" placeholder="appXXXXXX...">
     </div>
   </div>
+  
+  <div class="at-row" style="margin-top:-6px;">
+    <div class="kf">
+      <div class="klabel">Supabase URL <span style="color:#2a2a2a;font-size:8px">(OPTIONAL — memory layer)</span></div>
+      <input type="text" class="kinput" id="sburl" placeholder="https://xxxx.supabase.co">
+    </div>
+    <div class="kf">
+      <div class="klabel">Supabase Anon Key <span style="color:#2a2a2a;font-size:8px">(OPTIONAL — memory layer)</span></div>
+      <input type="password" class="kinput" id="sbanonkey" placeholder="eyJhbGci...">
+    </div>
+  </div>
 
   <div class="errmsg" id="errmsg"></div>
   <button class="analyze-btn" onclick="runAnalysis()">⚡ ANALYZE CREATIVE</button>
@@ -495,10 +506,27 @@ function runAnalysis() {
 
   var ctx = { brand: brand, platform: platform, objective: objective, niche: niche };
 
+  var sbUrl = document.getElementById('sburl').value.trim();
+  var sbKey = document.getElementById('sbanonkey').value.trim();
+
   geminiAnalyze(gk, selFile, brand, platform)
     .then(function(gi) {
       ctx.gemini = gi;
       ctx.script = gi ? (gi.transcript || '') : '';
+      // Search memory for similar ads if Supabase connected
+      if (sbUrl && sbKey) {
+        var summary = 'Brand: ' + brand + ' Platform: ' + platform + ' Niche: ' + (niche||'') + ' Visual: ' + (gi ? (gi.visual_hook||'') : '') + ' Transcript: ' + (gi ? (gi.transcript||'').substring(0,500) : '');
+        return getEmbedding(gk, summary)
+          .then(function(embedding) {
+            ctx.queryEmbedding = embedding;
+            return searchMemory(embedding, sbUrl, sbKey, 3);
+          })
+          .then(function(similarAds) {
+            ctx.similarAds = similarAds;
+            console.log('Found ' + similarAds.length + ' similar ads in memory');
+            return claudeAnalyze(ck, ctx);
+          });
+      }
       return claudeAnalyze(ck, ctx);
     })
     .then(function(cr) {
@@ -506,6 +534,19 @@ function runAnalysis() {
       cr._meta = ctx;
       result = cr;
       renderResults(cr, ctx.gemini, brand, platform, objective);
+
+      // Show similar ads found before Claude ran
+      if (ctx.similarAds && ctx.similarAds.length > 0) {
+        renderSimilarAds(ctx.similarAds);
+      }
+
+      // Save this ad to Supabase memory
+      var sbUrl2 = document.getElementById('sburl').value.trim();
+      var sbKey2 = document.getElementById('sbkey').value.trim();
+      if (sbUrl2 && sbKey2) {
+        saveToSupabase(sbUrl2, sbKey2, gk, cr, cr._meta)
+          .catch(function(e){ console.log('Supabase save:', e.message); });
+      }
     })
     .catch(function(err) {
       stopLoad();
@@ -564,7 +605,21 @@ function claudeAnalyze(ak, ctx) {
     gc = '\nGEMINI VIDEO ANALYSIS:\nTranscript: ' + (g.transcript||'N/A') + '\nVisual Hook: ' + (g.visual_hook||'N/A') + '\nPacing: ' + (g.scene_pacing||'N/A') + '\nCreator Energy: ' + (g.creator_energy||'N/A') + '\nProduct Visibility: ' + (g.product_visibility||'N/A') + '\nText Overlays: ' + overlays + '\nPlatform Fit: ' + (g.platform_fit||'N/A') + '\nHook Duration: ' + (g.hook_duration_s||'?') + 's\nTotal Duration: ' + (g.total_duration_s||'?') + 's\nScene Count: ' + (g.scene_count||'?');
   }
 
-  var p = 'You are an elite UGC ad creative analyst.\n\nBrand: ' + ctx.brand + '\nPlatform: ' + ctx.platform + '\nObjective: ' + ctx.objective + '\nNiche: ' + (ctx.niche||'Unknown') + gc + '\n\nReturn ONLY valid JSON:\n{"creative_score":<0-100>,"hook_retention_pct":<0-100>,"avg_watch_time_s":<n>,"video_duration_s":<n>,"cta_tap_rate_pct":<0-10>,"authenticity_score":<0-100>,"hook_score":<0-100>,"hook_score_label":"STRONG or MODERATE or WEAK","segments":[{"type":"hook","duration_s":<n>},{"type":"problem","duration_s":<n>},{"type":"product_demo","duration_s":<n>},{"type":"social_proof","duration_s":<n>},{"type":"cta","duration_s":<n>}],"hook_analysis":"<2-3 sentences>","authenticity_analysis":"<2 sentences>","pacing_analysis":"<2-3 sentences>","cta_analysis":"<2 sentences>","annotations":[{"label":"Hook drop-off: X%"},{"label":"Peak retention: X%"},{"label":"CTA engagement: X%"}],"recommendations":[{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"}],"alternative_hooks":[{"type":"CURIOSITY GAP","text":"<h>"},{"type":"BOLD CLAIM","text":"<h>"},{"type":"PAIN POINT","text":"<h>"},{"type":"SOCIAL PROOF OPEN","text":"<h>"}],"rewrite_variants":[{"variant":"VARIANT A - EMOTIONAL","script":"<s>"},{"variant":"VARIANT B - DIRECT RESPONSE","script":"<s>"},{"variant":"VARIANT C - STORYTELLING","script":"<s>"}]}';
+  // Build memory context from similar ads
+  var mc = '';
+  if (ctx.similarAds && ctx.similarAds.length > 0) {
+    mc = '\nSIMILAR ADS FROM YOUR LIBRARY - use to calibrate scoring:\n';
+    ctx.similarAds.forEach(function(ad, i) {
+      mc += (i+1) + '. ' + (ad.brand||'?') + ' | AI:' + (ad.creative_score||0);
+      if (ad.victor_score > 0) mc += ' | YOUR SCORE:' + ad.victor_score;
+      if (ad.victor_notes) mc += ' | YOUR NOTES:' + ad.victor_notes;
+      if (ad.fatal_flaws) mc += ' | FATAL FLAWS:' + ad.fatal_flaws;
+      mc += ' | SIMILARITY:' + Math.round((ad.similarity||0)*100) + '%\n';
+    });
+    mc += 'Apply these patterns: reward what scored high, penalize what scored low.\n';
+  }
+
+  var p = 'You are an elite UGC ad creative analyst.\n\nBrand: ' + ctx.brand + '\nPlatform: ' + ctx.platform + '\nObjective: ' + ctx.objective + '\nNiche: ' + (ctx.niche||'Unknown') + gc + mc + '\n\nReturn ONLY valid JSON:\n{"creative_score":<0-100>,"hook_retention_pct":<0-100>,"avg_watch_time_s":<n>,"video_duration_s":<n>,"cta_tap_rate_pct":<0-10>,"authenticity_score":<0-100>,"hook_score":<0-100>,"hook_score_label":"STRONG or MODERATE or WEAK","segments":[{"type":"hook","duration_s":<n>},{"type":"problem","duration_s":<n>},{"type":"product_demo","duration_s":<n>},{"type":"social_proof","duration_s":<n>},{"type":"cta","duration_s":<n>}],"hook_analysis":"<2-3 sentences>","authenticity_analysis":"<2 sentences>","pacing_analysis":"<2-3 sentences>","cta_analysis":"<2 sentences>","annotations":[{"label":"Hook drop-off: X%"},{"label":"Peak retention: X%"},{"label":"CTA engagement: X%"}],"recommendations":[{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"},{"title":"<t>","description":"<d>"}],"alternative_hooks":[{"type":"CURIOSITY GAP","text":"<h>"},{"type":"BOLD CLAIM","text":"<h>"},{"type":"PAIN POINT","text":"<h>"},{"type":"SOCIAL PROOF OPEN","text":"<h>"}],"rewrite_variants":[{"variant":"VARIANT A - EMOTIONAL","script":"<s>"},{"variant":"VARIANT B - DIRECT RESPONSE","script":"<s>"},{"variant":"VARIANT C - STORYTELLING","script":"<s>"}]}';
 
   return fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -830,6 +885,162 @@ function downloadReport() {
   btn.textContent = '✓ DOWNLOADED';
   setTimeout(function(){ btn.textContent = '⬇ DOWNLOAD REPORT'; }, 2500);
 }
+
+
+// ═══════════════════════════════════════════
+// MEMORY LAYER — Supabase + Gemini Embeddings
+// ═══════════════════════════════════════════
+
+function getEmbedding(text, geminiKey) {
+  return fetch('https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=' + geminiKey, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      model: 'models/text-embedding-004',
+      content: {parts: [{text: text.substring(0, 2000)}]}
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.error) throw new Error('Embedding: ' + d.error.message);
+    return d.embedding.values;
+  });
+}
+
+function searchMemory(embedding, sbUrl, sbKey, limit) {
+  return fetch(sbUrl + '/rest/v1/rpc/match_ads', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': sbKey,
+      'Authorization': 'Bearer ' + sbKey
+    },
+    body: JSON.stringify({
+      query_embedding: embedding,
+      match_threshold: 0.7,
+      match_count: limit || 3
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) { return Array.isArray(d) ? d : []; });
+}
+
+function saveToMemory(result, meta, geminiKey, sbUrl, sbKey) {
+  if (!sbUrl || !sbKey || !geminiKey) return Promise.resolve();
+  var g = meta.gemini || {};
+  var summaryParts = [
+    'Brand: ' + (meta.brand || ''),
+    'Platform: ' + (meta.platform || ''),
+    'Niche: ' + (meta.niche || ''),
+    'Hook label: ' + (result.hook_score_label || ''),
+    'Hook analysis: ' + (result.hook_analysis || '').substring(0, 200),
+    'Pacing: ' + (result.pacing_analysis || '').substring(0, 150),
+    'CTA: ' + (result.cta_analysis || '').substring(0, 150),
+    'Visual hook: ' + (g.visual_hook || ''),
+    'Creator energy: ' + (g.creator_energy || '')
+  ];
+  var summary = summaryParts.join('. ');
+
+  return getEmbedding(summary, geminiKey)
+    .then(function(embedding) {
+      var recs = (result.recommendations || []);
+      var fatalFlaws = recs.filter(function(r) {
+        return r.title && r.title.toUpperCase().indexOf('FATAL') > -1;
+      }).map(function(r) { return r.title; }).join(', ');
+
+      var patterns = (result.alternative_hooks || []).map(function(h) {
+        return h.type;
+      }).join(', ');
+
+      var record = {
+        brand: meta.brand || '',
+        platform: meta.platform || '',
+        niche: meta.niche || '',
+        creative_score: result.creative_score || 0,
+        hook_score: result.hook_score || 0,
+        hook_score_label: result.hook_score_label || '',
+        authenticity_score: result.authenticity_score || 0,
+        victor_score: 0,
+        victor_notes: '',
+        hook_analysis: (result.hook_analysis || '').substring(0, 500),
+        pacing_analysis: (result.pacing_analysis || '').substring(0, 300),
+        fatal_flaws: fatalFlaws,
+        hook_type: result.hook_score_label || '',
+        key_patterns: patterns,
+        summary: summary.substring(0, 500),
+        embedding: embedding
+      };
+
+      return fetch(sbUrl + '/rest/v1/ad_memories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': sbKey,
+          'Authorization': 'Bearer ' + sbKey,
+          'Prefer': 'return=minimal'
+        },
+        body: JSON.stringify(record)
+      });
+    })
+    .then(function(r) {
+      if (r.ok) console.log('Saved to memory');
+      return r;
+    });
+}
+
+function renderSimilarAds(similarAds) {
+  if (!similarAds || similarAds.length === 0) return;
+  var existing = document.getElementById('similar-ads-card');
+  if (existing) existing.remove();
+
+  var html = '<div id="similar-ads-card" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:11px;padding:24px;margin-bottom:16px;">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">';
+  html += '<div class="clabel" style="margin:0;">Similar Ads From Your Library</div>';
+  html += '<span style="font-family:monospace;font-size:9px;padding:2px 8px;border-radius:3px;background:#00c47a12;color:#00c47a;border:1px solid #00c47a25;">MEMORY LAYER ACTIVE</span>';
+  html += '</div>';
+
+  similarAds.forEach(function(ad) {
+    var sc = ad.creative_score || 0;
+    var vs = ad.victor_score || 0;
+    var displayScore = vs > 0 ? vs : sc;
+    var scoreLabel = vs > 0 ? 'YOUR SCORE' : 'AI SCORE';
+    var scoreColor = displayScore >= 75 ? '#00ff88' : displayScore >= 50 ? '#ffb800' : '#ff4d00';
+    var sim = Math.round((ad.similarity || 0) * 100);
+
+    html += '<div style="background:#111;border:1px solid #1a1a1a;border-radius:8px;padding:14px;margin-bottom:10px;">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
+    html += '<div>';
+    html += '<span style="font-size:14px;font-weight:500;color:#ddd;margin-right:10px;">' + (ad.brand || 'Unknown') + '</span>';
+    html += '<span style="font-size:10px;color:#444;">' + (ad.platform || '').toUpperCase() + '</span>';
+    html += '</div>';
+    html += '<div style="text-align:right;">';
+    html += '<div style="font-size:9px;color:#444;font-family:monospace;">' + sim + '% similar</div>';
+    html += '<div style="font-size:9px;color:#444;font-family:monospace;margin-top:2px;">' + scoreLabel + '</div>';
+    html += '<div style="font-family:monospace;font-size:18px;font-weight:700;color:' + scoreColor + ';">' + displayScore + '/100</div>';
+    html += '</div></div>';
+
+    if (ad.hook_analysis) {
+      html += '<div style="font-size:12px;color:#666;line-height:1.6;margin-bottom:6px;">' + ad.hook_analysis.substring(0, 180) + '...</div>';
+    }
+    if (vs > 0 && ad.victor_notes) {
+      html += '<div style="font-size:10px;color:#00c47a;font-family:monospace;margin-top:5px;">YOUR NOTE: ' + ad.victor_notes + '</div>';
+    }
+    if (ad.fatal_flaws) {
+      html += '<div style="font-size:10px;color:#ff4d00;font-family:monospace;margin-top:4px;">FATAL FLAWS: ' + ad.fatal_flaws + '</div>';
+    }
+    html += '</div>';
+  });
+
+  html += '</div>';
+
+  var recsCard = document.querySelector('.recscard');
+  if (recsCard) {
+    recsCard.insertAdjacentHTML('beforebegin', html);
+  } else {
+    document.getElementById('view-results').insertAdjacentHTML('afterbegin', html);
+  }
+}
+
 
 function resetUI() {
   selFile = null; result = null; removeFile();
