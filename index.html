@@ -306,6 +306,18 @@ body{background:#080808;color:#e8e4dc;font-family:'DM Sans',sans-serif;min-heigh
     <div class="ld" id="ld3"></div>
     <div class="ld" id="ld4"></div>
   </div>
+  <div style="width:280px;margin:20px auto 0;">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+      <span style="font-family:monospace;font-size:9px;color:#333;text-transform:uppercase;letter-spacing:0.1em;" id="lpct">0%</span>
+      <span style="font-family:monospace;font-size:9px;color:#333;" id="lstep">Step 1 of 5</span>
+    </div>
+    <div style="height:2px;background:#111;border-radius:1px;overflow:hidden;">
+      <div id="lprogress" style="height:100%;width:0%;background:#ff4d00;border-radius:1px;transition:width 0.6s ease;"></div>
+    </div>
+  </div>
+  <div style="margin-top:20px;padding:10px 18px;background:#0d0d0d;border:1px solid #1a1a1a;border-radius:6px;text-align:center;">
+    <span style="font-family:monospace;font-size:9px;color:#333;">&#9888; Don't close or refresh this tab — analysis is running</span>
+  </div>
 </div>
 
 <!-- VIEW 3: RESULTS -->
@@ -419,10 +431,11 @@ var lvl = null;
 var SCOLS = {hook:'s-hook',problem:'s-problem',product_demo:'s-demo',social_proof:'s-social',cta:'s-cta'};
 var SLBLS = {hook:'HOOK',problem:'PROBLEM',product_demo:'PRODUCT DEMO',social_proof:'SOCIAL PROOF',cta:'CTA'};
 var STAGES = [
-  {s:'UPLOADING',d:'Sending video to Gemini 2.5 Flash Lite...',n:[1]},
-  {s:'GEMINI WATCHING',d:'AI is analyzing your video frame by frame...',n:[1,2]},
-  {s:'EXTRACTING',d:'Identifying hook, pacing, visual elements...',n:[1,2,3]},
-  {s:'CLAUDE SCORING',d:'Applying creative intelligence rubric...',n:[1,2,3,4]}
+  {s:'UPLOADING',d:'Sending video to Gemini — this may take 15-30 seconds for larger files...',n:[1],pct:10,step:'Step 1 of 5'},
+  {s:'PROCESSING',d:'Gemini is processing your video — waiting for it to become ready...',n:[1,2],pct:25,step:'Step 2 of 5'},
+  {s:'GEMINI WATCHING',d:'AI is watching your video frame by frame — extracting transcript and visuals...',n:[1,2,3],pct:45,step:'Step 3 of 5'},
+  {s:'BUILDING CONTEXT',d:'Searching memory layer for similar ads to calibrate scoring...',n:[1,2,3],pct:60,step:'Step 4 of 5'},
+  {s:'CLAUDE SCORING',d:'Applying your 6-year knowledge layer — scoring hook, pacing, CTA, authenticity...',n:[1,2,3,4],pct:80,step:'Step 5 of 5'}
 ];
 
 function showView(id) {
@@ -480,6 +493,14 @@ function setStage(s) {
   for (var i = 1; i <= 4; i++) {
     document.getElementById('ld' + i).className = 'ld' + (s.n.indexOf(i) > -1 ? ' on' : '');
   }
+  if (s.pct !== undefined) {
+    var bar = document.getElementById('lprogress');
+    var pct = document.getElementById('lpct');
+    var step = document.getElementById('lstep');
+    if (bar) bar.style.width = s.pct + '%';
+    if (pct) pct.textContent = s.pct + '%';
+    if (step) step.textContent = s.step || '';
+  }
 }
 
 function startLoad() {
@@ -514,6 +535,7 @@ function runAnalysis() {
     .then(function(gi) {
       ctx.gemini = gi;
       ctx.script = gi ? (gi.transcript || '') : '';
+      setStage(STAGES[3]); // BUILDING CONTEXT - memory search
       // Search memory with timeout - never blocks Claude
       ctx.similarAds = [];
       var memoryPromise = Promise.resolve();
@@ -532,10 +554,12 @@ function runAnalysis() {
           timeoutPromise
         ]).catch(function() { ctx.similarAds = []; });
       }
-      return memoryPromise.then(function() { return claudeAnalyze(ck, ctx); });
+      return memoryPromise.then(function() { setStage(STAGES[4]); return claudeAnalyze(ck, ctx); });
     })
     .then(function(cr) {
       stopLoad();
+      var bar = document.getElementById('lprogress'); if(bar) bar.style.width='100%';
+      var pct = document.getElementById('lpct'); if(pct) pct.textContent='100%';
       cr._meta = ctx;
       result = cr;
       renderResults(cr, ctx.gemini, brand, platform, objective);
@@ -581,8 +605,28 @@ function geminiAnalyze(ak, file, brand, platform) {
     if (!ud.file || !ud.file.uri) throw new Error('Upload did not return file URI');
     var uri = ud.file.uri;
     var mt = file.type;
-    return new Promise(function(res) { setTimeout(res, 12000); })
+    var fileName = ud.file.name;
+    setStage(STAGES[1]); // PROCESSING
+
+    function waitForActive(attempts) {
+      if (attempts <= 0) return Promise.resolve();
+      return fetch('https://generativelanguage.googleapis.com/v1beta/' + fileName + '?key=' + ak)
+        .then(function(r) { return r.json(); })
+        .then(function(d) {
+          if (d.state === 'ACTIVE') return Promise.resolve();
+          return new Promise(function(res) { setTimeout(res, 3000); })
+            .then(function() { return waitForActive(attempts - 1); });
+        })
+        .catch(function() {
+          return new Promise(function(res) { setTimeout(res, 3000); })
+            .then(function() { return waitForActive(attempts - 1); });
+        });
+    }
+
+    return new Promise(function(res) { setTimeout(res, 8000); })
+      .then(function() { return waitForActive(20); })
       .then(function() {
+        setStage(STAGES[2]); // GEMINI WATCHING
         return fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=' + ak, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
@@ -591,13 +635,13 @@ function geminiAnalyze(ak, file, brand, platform) {
             generationConfig: {temperature: 0, maxOutputTokens: 1500}
           })
         });
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(d) {
+        if (d.error) throw new Error('Gemini error: ' + d.error.message);
+        var t = d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0] ? d.candidates[0].content.parts[0].text : '{}';
+        return safeJSON(t);
       });
-  })
-  .then(function(r) { return r.json(); })
-  .then(function(d) {
-    if (d.error) throw new Error('Gemini error: ' + d.error.message);
-    var t = d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0] ? d.candidates[0].content.parts[0].text : '{}';
-    return safeJSON(t);
   });
 }
 
