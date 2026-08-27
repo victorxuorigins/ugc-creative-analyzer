@@ -632,15 +632,18 @@ function geminiAnalyze(ak, file, brand, platform) {
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
             contents: [{parts: [{file_data: {mime_type: mt, file_uri: uri}}, {text: prompt}]}],
-            generationConfig: {temperature: 0, maxOutputTokens: 1500}
+            generationConfig: {temperature: 0, maxOutputTokens: 8192, responseMimeType: 'application/json'}
           })
         });
       })
       .then(function(r) { return r.json(); })
       .then(function(d) {
         if (d.error) throw new Error('Gemini error: ' + d.error.message);
-        var t = d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts && d.candidates[0].content.parts[0] ? d.candidates[0].content.parts[0].text : '{}';
-        return safeJSON(t);
+        var cand = d.candidates && d.candidates[0];
+        var parts = cand && cand.content && cand.content.parts;
+        var t = parts && parts[0] && parts[0].text;
+        if (!t) throw new Error('Gemini returned no text (finishReason: ' + ((cand && cand.finishReason) || 'unknown') + ')');
+        return safeJSON(t, 'Gemini');
       });
   });
 }
@@ -673,39 +676,53 @@ function claudeAnalyze(ak, ctx) {
   return fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {'Content-Type':'application/json','x-api-key':ak,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body: JSON.stringify({model:'claude-sonnet-4-5',max_tokens:2500,temperature:0,system:SYSTEM_PROMPT,messages:[{role:'user',content:p}]})
+    body: JSON.stringify({model:'claude-sonnet-4-5',max_tokens:16000,temperature:0,system:SYSTEM_PROMPT,messages:[{role:'user',content:p}]})
   })
   .then(function(r) { return r.json(); })
   .then(function(d) {
     if (d.error) throw new Error('Claude error: ' + d.error.message);
-    return safeJSON(d.content[0].text);
+    if (d.stop_reason === 'max_tokens') console.warn('Claude hit max_tokens - JSON was truncated, salvaging');
+    return safeJSON(d.content[0].text, 'Claude');
   });
 }
 
-function safeJSON(text) {
-  var m = text.match(/\{[\s\S]*\}/);
-  if (!m) throw new Error('Could not parse AI response');
-  var jsonStr = m[0];
-  // Remove control characters that break JSON parsing
-  jsonStr = jsonStr.replace(/[\u0000-\u001F\u007F]/g, function(ch) {
-    // Keep legitimate whitespace
-    if (ch === '\n' || ch === '\r' || ch === '\t') return ' ';
-    return '';
+function safeJSON(text, who) {
+  who = who || 'AI';
+  var start = text.indexOf('{');
+  if (start < 0) throw new Error('Could not parse ' + who + ' response: no JSON in it');
+  // Strip control characters that break JSON.parse; keep whitespace as a space.
+  var s = text.slice(start).replace(/[\u0000-\u001F\u007F]/g, function(ch) {
+    return (ch === '\n' || ch === '\r' || ch === '\t') ? ' ' : '';
   });
-  try {
-    return JSON.parse(jsonStr);
-  } catch(e) {
-    // Try to fix common issues - truncated strings, trailing commas
-    jsonStr = jsonStr
-      .replace(/,\s*}/g, '}')
-      .replace(/,\s*]/g, ']')
-      .replace(/([^\\])"\s*\n\s*"/g, '$1" "');
-    try {
-      return JSON.parse(jsonStr);
-    } catch(e2) {
-      throw new Error('Could not parse AI response: ' + e2.message);
-    }
+  var attempts = [s, s.replace(/,\s*([}\]])/g, '$1'), repairTruncated(s)];
+  for (var i = 0; i < attempts.length; i++) {
+    try { return JSON.parse(attempts[i]); } catch(e) {}
   }
+  throw new Error('Could not parse ' + who + ' response (cut off or malformed)');
+}
+
+// Model ran out of tokens mid-JSON: rewind to the last completed value and close
+// the open brackets. Returns the original string if nothing is salvageable.
+function repairTruncated(s) {
+  var stack = [], inStr = false, esc = false, checks = [];
+  for (var i = 0; i < s.length; i++) {
+    var c = s.charAt(i);
+    if (esc) { esc = false; continue; }
+    if (c === '\\') { esc = true; continue; }
+    if (inStr) { if (c === '"') { inStr = false; checks.push([i + 1, stack.slice()]); } continue; }
+    if (c === '"') inStr = true;
+    else if (c === '{') stack.push('}');
+    else if (c === '[') stack.push(']');
+    else if (c === '}' || c === ']') { stack.pop(); checks.push([i + 1, stack.slice()]); }
+    else if (c === ',') checks.push([i, stack.slice()]);  // number/bool/null just ended
+  }
+  // ponytail: rewind at most 200 checkpoints; a deeper rewind means the response
+  // was mostly garbage anyway.
+  for (var j = checks.length - 1; j >= 0 && j > checks.length - 200; j--) {
+    var cand = s.slice(0, checks[j][0]) + checks[j][1].slice().reverse().join('');
+    try { JSON.parse(cand); return cand; } catch(e) {}
+  }
+  return s;
 }
 
 function renderResults(d, g, brand, platform, objective) {
